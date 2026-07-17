@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Express Your Feelings</title>
-    <!-- It must look exactly like this line below -->
+    <!-- Simple, clean relative links ensure perfect loading on GitHub Pages -->
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
@@ -34,30 +34,30 @@
             <h2>Tell us more...</h2>
             
             <label>1. If you look back at school, who was that one hidden crush you were completely obsessed with, but too shy to ever tell anyone? 💛💛</label>
-            <textarea id="q1" rows="2"></textarea>
+            <textarea id="q1" rows="2" placeholder="Type your secret crush..."></textarea>
 
             <label>2. What thing makes you happy, but you always act as you don't care?</label>
-            <textarea id="q2" rows="2"></textarea>
+            <textarea id="q2" rows="2" placeholder="Type your answer..."></textarea>
 
             <label>4. What is your most memorable day that you won't forget in your life?</label>
-            <textarea id="q4" rows="2"></textarea>
+            <textarea id="q4" rows="2" placeholder="Type your memorable day..."></textarea>
 
             <label>5. Who is your crush? ❤️❤️</label>
-            <input type="text" id="q5">
+            <input type="text" id="q5" placeholder="Type your current crush...">
 
             <button id="submitBtn">Submit</button>
         </div>
 
         <!-- PAGE 4: SMILE ALWAYS -->
         <div id="page4" class="page">
-            <h1 style="font-size: 40px;">smile always 🙂🙂</h1>
+            <h1 class="smile-text">smile always 🙂🙂</h1>
         </div>
 
         <!-- PAGE 5: NOT ALRIGHT (MUSIC & AUDIO PLAYER) -->
         <div id="page5" class="page">
             <h2>Take a deep breath and listen... 🎧</h2>
             <p>Music is playing in the background to comfort you.</p>
-            <audio id="sadSong" loop>
+            <audio id="feeling song" loop>
                 <source src="https://snfdxgjnwdihrjcwuess.supabase.co/storage/v1/object/public/music/feelings.mp3.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
@@ -68,7 +68,7 @@
         <div id="page6" class="page">
             <h2>Admin Dashboard</h2>
             <div id="adminData">Loading responses...</div>
-            <button id="exitAdminBtn" style="background: #555;">Exit Admin</button>
+            <button id="exitAdminBtn" style="background: #44475a; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">Exit Admin</button>
         </div>
 
     </div>
