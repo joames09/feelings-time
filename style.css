@@ -1,0 +1,142 @@
+:root {
+    --bg-gradient: linear-gradient(135deg, #1e1e2f, #2a2a40);
+    --card-bg: rgba(255, 255, 255, 0.07);
+    --accent-color: #ff6584;
+    --text-color: #ffffff;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 90%;
+    max-width: 450px;
+    text-align: center;
+    transition: all 0.5s ease-in-out;
+    position: relative;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+h2 {
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin-top: 15px;
+    font-size: 14px;
+    color: #ffcbd5;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+button {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 15px;
+    transition: transform 0.2s, background 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: #ff476c;
+}
+
+.btn-group {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.headphone-bg {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.95) 100%), url('https://unsplash.com');
+    background-size: cover;
+    background-position: center;
+}
+
+.secret-admin-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+    font-size: 10px;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    border: none;
+    margin: 0;
+}
+
+.secret-admin-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: none;
+}
+
+.admin-table-wrapper {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: rgba(0,0,0,0.3);
+}
+
+.admin-table th, .admin-table td {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    text-align: left;
+}
+
+.admin-table th {
+    background: rgba(255, 255, 255, 0.15);
+    position: sticky;
+    top: 0;
+}
