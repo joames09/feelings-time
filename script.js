@@ -1,7 +1,7 @@
 // GLOBAL DATABASE SETTINGS
 let userNickname = "";
-const BASE_API_URL = "https://snfdxgjnwdihrjcwuess.supabase.co"; 
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmR4Z2pud2RpaHJqY3d1ZXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMTUxNjAsImV4cCI6MjA5OTc5MTE2MH0.N7v89MvBDWLq2gLxHS-LbzptmmE81X7mSZzVqz1GsEg";
+const BASE_API_URL = "snfdxgjnwdihrjcwuess"; 
+const ANON_KEY = "sb_publishable_sG_CpYhaZynQ3t4nARNngA_QShTkxYT";
 
 // NAVIGATION ENGINE
 function showPage(pageId) {
