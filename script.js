@@ -23,17 +23,16 @@ function handleStatus(status) {
         showPage('page3');
     } else {
         showPage('page5');
-        
-        // This forces the song to play directly when the button is clicked
-        const song = document.getElementById('sadSong');
-        if (song) {
-            song.currentTime = 0;
-            // A short delay guarantees the browser registers the user's tap
-            setTimeout(() => {
-                song.play().catch(e => {
-                    alert("Click anywhere on the screen to let the music play! 🎧");
-                });
-            }, 100);
+        try {
+            const song = document.getElementById('sadSong');
+            if (song) {
+                song.currentTime = 0;
+                setTimeout(() => {
+                    song.play().catch(e => console.log("Audio waiting for user tap."));
+                }, 100);
+            }
+        } catch(err) {
+            console.log("Audio bypass.");
         }
     }
 }
@@ -58,7 +57,6 @@ async function submitAnswers() {
             method: "POST",
             headers: {
                 "apikey": ANON_KEY,
-                "Authorization": "Bearer " + ANON_KEY,
                 "Content-Type": "application/json",
                 "Prefer": "return=minimal"
             },
@@ -68,10 +66,10 @@ async function submitAnswers() {
         if (response.ok) {
             showPage('page4');
         } else {
-            alert("Error saving answers. Check your Supabase RLS and Table name!");
+            alert("Error saving answers. Check table schemas!");
         }
     } catch (err) {
-        alert("Database connection dropped.");
+        alert("Submission network error.");
     }
 }
 
@@ -90,16 +88,16 @@ async function fetchAdminData() {
     document.getElementById('adminData').innerText = "Loading responses...";
     
     try {
+        // Cleaned up headers prevent header duplication errors
         const response = await fetch(`${BASE_API_URL}?select=*&order=created_at.desc`, {
             method: "GET",
             headers: {
-                "apikey": ANON_KEY,
-                "Authorization": "Bearer " + ANON_KEY
+                "apikey": ANON_KEY
             }
         });
 
         if (!response.ok) {
-            document.getElementById('adminData').innerText = "Failed to pull records. Check table permissions.";
+            document.getElementById('adminData').innerText = "Failed to pull records. Check database state.";
             return;
         }
 
@@ -132,7 +130,8 @@ async function fetchAdminData() {
         document.getElementById('adminData').innerHTML = html;
 
     } catch (err) {
-        document.getElementById('adminData').innerText = "Connection error.";
+        document.getElementById('adminData').innerText = "Connection error dropped.";
+        console.error(err);
     }
 }
 
@@ -144,7 +143,7 @@ function escapeHtml(text) {
     return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
 }
 
-// EVENT LISTENERS BINDING BLOCK
+// EVENT LISTENERS INITIALIZATION
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("nextBtn").addEventListener("click", goToPage2);
     document.getElementById("adminBtn").addEventListener("click", openAdminModal);
