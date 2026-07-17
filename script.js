@@ -1,155 +1,140 @@
-// GLOBAL DATABASE SETTINGS
-let userNickname = "";
-const BASE_API_URL = "snfdxgjnwdihrjcwuess"; 
-const ANON_KEY = "sb_publishable_sG_CpYhaZynQ3t4nARNngA_QShTkxYT";
+// 1. DATABASE LINK CONFIGURATION (Make sure there are no slashes at the end!)
+const PROJECT_ID = "snfdxgjnwdihrjcwuess"; 
+const ANON_KEY = "sb_publishable_sG_CpYhaZynQ3t4nARNngA_QShTkxYT"; 
 
-// NAVIGATION ENGINE
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
-}
+let currentUserName = "";
 
-function goToPage2() {
-    userNickname = document.getElementById('nickname').value.trim();
-    if (!userNickname) {
-        alert("Please enter a nickname first!");
+// 2. USER PASSWORD VERIFICATION (1234)
+function checkPassword() {
+    const nameInput = document.getElementById("username").value.trim();
+    const passInput = document.getElementById("password").value;
+    const errorMsg = document.getElementById("login-error");
+
+    if (nameInput === "") {
+        errorMsg.innerText = "Please enter your beautiful name first!";
         return;
     }
-    showPage('page2');
-}
 
-function handleStatus(status) {
-    if (status === 'alright') {
-        showPage('page3');
+    if (passInput === "1234") {
+        currentUserName = nameInput;
+        document.getElementById("login-page").classList.remove("active");
+        document.getElementById("question-page").classList.add("active");
     } else {
-        showPage('page5');
-        try {
-            const song = document.getElementById('sadSong');
-            if (song) {
-                song.currentTime = 0;
-                setTimeout(() => {
-                    song.play().catch(e => console.log("Audio waiting for user tap."));
-                }, 100);
-            }
-        } catch(err) {
-            console.log("Audio bypass.");
-        }
+        errorMsg.innerText = "Wrong password! Hint: 1234";
     }
 }
 
-function stopMusic() {
-    try { document.getElementById('sadSong').pause(); } catch(e){}
-    showPage('page1');
-}
+// 3. SUBMIT FORM (Sends data directly to the internet database)
+async function submitAnswers(event) {
+    event.preventDefault();
 
-// DATABASE DATA SUBMISSION
-async function submitAnswers() {
-    const payload = {
-        nickname: userNickname,
-        crush_school: document.getElementById('q1').value,
-        happy_secret: document.getElementById('q2').value,
-        memorable_day: document.getElementById('q4').value,
-        current_crush: document.getElementById('q5').value
+    const dataToSave = {
+        name: currentUserName,
+        question_1: document.getElementById("q1").value,
+        question_2: document.getElementById("q2").value,
+        question_3: document.getElementById("q3").value,
+        question_4: document.getElementById("q4").value,
+        question_5: document.getElementById("q5").value
     };
 
+    // Show the user the success page instantly so they don't experience a loading freeze
+    document.getElementById("question-page").classList.remove("active");
+    document.getElementById("success-page").classList.add("active");
+    document.getElementById("quiz-form").reset();
+
+    // Silently send the data to the central internet database via a background fetch request
     try {
-        const response = await fetch(BASE_API_URL, {
-            method: "POST",
+        await fetch(`https://${PROJECT_ID}.supabase.co/rest/v1/floral_responses`, {
+            method: 'POST',
             headers: {
-                "apikey": ANON_KEY,
-                "Content-Type": "application/json",
-                "Prefer": "return=minimal"
+                'apikey': ANON_KEY,
+                'Authorization': `Bearer ${ANON_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(dataToSave)
         });
-
-        if (response.ok) {
-            showPage('page4');
-        } else {
-            alert("Error saving answers. Check table schemas!");
-        }
-    } catch (err) {
-        alert("Submission network error.");
+    } catch (error) {
+        console.error("Database cloud backup failed:", error);
     }
 }
 
-// SECRET ADMIN SUB-SYSTEM
-function openAdminModal() {
-    const password = prompt("Enter Admin Password:");
-    if (password === "joel2006.") {
-        showPage('page6');
-        fetchAdminData();
-    } else if (password !== null) {
-        alert("Incorrect password!");
+// 4. OPEN ADMIN GATEWAY (Requires password: joel)
+function openAdminPanel() {
+    const adminPassword = prompt("Enter Admin Password:");
+    
+    if (adminPassword === "joel") {
+        document.getElementById("login-page").classList.remove("active");
+        document.getElementById("admin-page").classList.add("active");
+        displayResponses();
+    } else if (adminPassword !== null) {
+        alert("Access Denied! You are not authorized to view subscriptions.");
     }
 }
 
-async function fetchAdminData() {
-    document.getElementById('adminData').innerText = "Loading responses...";
+// 5. FETCH AND DISPLAY EVERYONE'S SUBMISSIONS FROM THE INTERNET
+async function displayResponses() {
+    const container = document.getElementById("responses-container");
+    container.innerHTML = "<p style='text-align:center; color:#95a5a6;'>Gathering flower secrets from the cloud...</p>"; 
     
     try {
-        // Cleaned up headers prevent header duplication errors
-        const response = await fetch(`${BASE_API_URL}?select=*&order=created_at.desc`, {
-            method: "GET",
+        const response = await fetch(`https://${PROJECT_ID}.supabase.co/rest/v1/floral_responses?select=*`, {
+            method: 'GET',
             headers: {
-                "apikey": ANON_KEY
+                'apikey': ANON_KEY,
+                'Authorization': `Bearer ${ANON_KEY}`
             }
         });
-
-        if (!response.ok) {
-            document.getElementById('adminData').innerText = "Failed to pull records. Check database state.";
-            return;
-        }
-
-        const data = await response.json();
-
-        if (!data || data.length === 0) {
-            document.getElementById('adminData').innerText = "No responses recorded yet.";
-            return;
-        }
-
-        let html = `<div class="admin-table-wrapper"><table class="admin-table">
-            <tr>
-                <th>Name</th>
-                <th>Q1 (School)</th>
-                <th>Q2 (Happy)</th>
-                <th>Q4 (Memorable)</th>
-                <th>Q5 (Crush)</th>
-            </tr>`;
         
-        data.forEach(row => {
-            html += `<tr>
-                <td><b>${escapeHtml(row.nickname)}</b></td>
-                <td>${escapeHtml(row.crush_school)}</td>
-                <td>${escapeHtml(row.happy_secret)}</td>
-                <td>${escapeHtml(row.memorable_day)}</td>
-                <td>${escapeHtml(row.current_crush)}</td>
-            </tr>`;
+        const allResponses = await response.json();
+        container.innerHTML = ""; 
+        
+        if (!allResponses || allResponses.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#95a5a6;'>No garden subscriptions found yet.</p>";
+            return;
+        }
+        
+        // Loop through everyone's responses across the world!
+        allResponses.forEach((entry) => {
+            const card = document.createElement("div");
+            card.className = "response-card";
+            card.innerHTML = `
+                <h3>${entry.name}</h3>
+                <div class="response-item"><strong>Outfit Secret:</strong> ${entry.question_1 || ''}</div>
+                <div class="response-item"><strong>Alien Movie:</strong> ${entry.question_2 || ''}</div>
+                <div class="response-item"><strong>Panicked Lie:</strong> ${entry.question_3 || ''}</div>
+                <div class="response-item"><strong>Blind Argument:</strong> ${entry.question_4 || ''}</div>
+                <div class="response-item"><strong>Terrible Advice:</strong> ${entry.question_5 || ''}</div>
+            `;
+            container.appendChild(card);
         });
-        html += `</table></div>`;
-        document.getElementById('adminData').innerHTML = html;
-
-    } catch (err) {
-        document.getElementById('adminData').innerText = "Connection error dropped.";
-        console.error(err);
+    } catch (dbError) {
+        container.innerHTML = "<p style='text-align:center; color:red;'>Could not load from server. Ensure RLS is disabled.</p>";
+        console.error("Database connection issue:", dbError);
     }
 }
 
-function exitAdmin() {
-    showPage('page1');
+// 6. DELETE EVERYONE'S RESPONSES FROM THE SERVER
+async function clearAllData() {
+    const confirmDelete = confirm("Permanently erase ALL responses across the entire server database?");
+    if (confirmDelete) {
+        try {
+            await fetch(`https://${PROJECT_ID}.supabase.co/rest/v1/floral_responses`, {
+                method: 'DELETE',
+                headers: {
+                    'apikey': ANON_KEY,
+                    'Authorization': `Bearer ${ANON_KEY}`
+                }
+            });
+            displayResponses();
+            alert("Garden database wiped clean!");
+        } catch (err) {
+            alert("Failed to delete entries from the server.");
+        }
+    }
 }
 
-function escapeHtml(text) {
-    return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
+function goBackToLogin() {
+    document.getElementById("admin-page").classList.remove("active");
+    document.getElementById("login-page").classList.add("active");
 }
-
-// EVENT LISTENERS INITIALIZATION
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("nextBtn").addEventListener("click", goToPage2);
-    document.getElementById("adminBtn").addEventListener("click", openAdminModal);
-    document.getElementById("alrightBtn").addEventListener("click", () => handleStatus('alright'));
-    document.getElementById("notAlrightBtn").addEventListener("click", () => handleStatus('not-alright'));
-    document.getElementById("submitBtn").addEventListener("click", submitAnswers);
-    document.getElementById("backBtn").addEventListener("click", stopMusic);
-    document.getElementById("exitAdminBtn").addEventListener("click", exitAdmin);
-});
