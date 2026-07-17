@@ -22,14 +22,18 @@ function handleStatus(status) {
     if (status === 'alright') {
         showPage('page3');
     } else {
-        // FIXED: The music page displays perfectly now
         showPage('page5');
-        try {
-            const song = document.getElementById('sadSong');
+        
+        // This forces the song to play directly when the button is clicked
+        const song = document.getElementById('sadSong');
+        if (song) {
             song.currentTime = 0;
-            song.play().catch(e => console.log("Audio waiting for player tap click."));
-        } catch(err) {
-            console.log("Audio process bypassed safely.");
+            // A short delay guarantees the browser registers the user's tap
+            setTimeout(() => {
+                song.play().catch(e => {
+                    alert("Click anywhere on the screen to let the music play! 🎧");
+                });
+            }, 100);
         }
     }
 }
