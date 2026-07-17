@@ -3,305 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Express Your Feelings</title>
-    
-    <script>
-        // GLOBAL SETTINGS
-        let userNickname = "";
-        const BASE_API_URL = "https://supabase.co"; 
-        const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmR4Z2pud2RpaHJqY3d1ZXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMTUxNjAsImV4cCI6MjA5OTc5MTE2MH0.N7v89MvBDWLq2gLxHS-LbzptmmE81X7mSZzVqz1GsEg";
-
-        // NAVIGATION LOGIC
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            
-            if(pageId !== 'page5') {
-                document.getElementById('mainContainer').classList.remove('headphone-bg');
-            }
-        }
-
-        function goToPage2() {
-            userNickname = document.getElementById('nickname').value.trim();
-            if (!userNickname) {
-                alert("Please enter a nickname first!");
-                return;
-            }
-            showPage('page2');
-        }
-
-        function handleStatus(status) {
-            if (status === 'alright') {
-                showPage('page3');
-            } else {
-                document.getElementById('mainContainer').classList.add('headphone-bg');
-                showPage('page5');
-                try {
-                    const song = document.getElementById('sadSong');
-                    song.currentTime = 0;
-                    song.play().catch(e => console.log("Waiting for user tap interaction to play music."));
-                } catch(err) {
-                    console.log("Audio launch issue bypassed.");
-                }
-            }
-        }
-
-        function stopMusic() {
-            try { document.getElementById('sadSong').pause(); } catch(e){}
-            showPage('page1');
-        }
-
-        // DATABASE SUBMISSION
-        async function submitAnswers() {
-            const payload = {
-                nickname: userNickname,
-                crush_school: document.getElementById('q1').value,
-                happy_secret: document.getElementById('q2').value,
-                memorable_day: document.getElementById('q4').value,
-                current_crush: document.getElementById('q5').value
-            };
-
-            try {
-                const response = await fetch(BASE_API_URL, {
-                    method: "POST",
-                    headers: {
-                        "apikey": ANON_KEY,
-                        "Authorization": "Bearer " + ANON_KEY,
-                        "Content-Type": "application/json",
-                        "Prefer": "return=minimal"
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    showPage('page4');
-                } else {
-                    alert("Error saving your answers. Make sure RLS is disabled inside your Supabase table!");
-                }
-            } catch (err) {
-                alert("Database network communication error.");
-                console.error(err);
-            }
-        }
-
-        // SECRET ADMIN REGION
-        function openAdminModal() {
-            const password = prompt("Enter Admin Password:");
-            if (password === "joel2006.") {
-                showPage('page6');
-                fetchAdminData();
-            } else if (password !== null) {
-                alert("Incorrect password!");
-            }
-        }
-
-        async function fetchAdminData() {
-            document.getElementById('adminData').innerText = "Loading responses...";
-            
-            try {
-                const response = await fetch(`${BASE_API_URL}?select=*&order=created_at.desc`, {
-                    method: "GET",
-                    headers: {
-                        "apikey": ANON_KEY,
-                        "Authorization": "Bearer " + ANON_KEY
-                    }
-                });
-
-                if (!response.ok) {
-                    document.getElementById('adminData').innerText = "Failed to pull records from dashboard.";
-                    return;
-                }
-
-                const data = await response.json();
-
-                if (!data || data.length === 0) {
-                    document.getElementById('adminData').innerText = "No responses recorded yet.";
-                    return;
-                }
-
-                let html = `<div class="admin-table-wrapper"><table class="admin-table">
-                    <tr>
-                        <th>Name</th>
-                        <th>Q1 (School)</th>
-                        <th>Q2 (Happy)</th>
-                        <th>Q4 (Memorable)</th>
-                        <th>Q5 (Crush)</th>
-                    </tr>`;
-                
-                data.forEach(row => {
-                    html += `<tr>
-                        <td><b>${escapeHtml(row.nickname)}</b></td>
-                        <td>${escapeHtml(row.crush_school)}</td>
-                        <td>${escapeHtml(row.happy_secret)}</td>
-                        <td>${escapeHtml(row.memorable_day)}</td>
-                        <td>${escapeHtml(row.current_crush)}</td>
-                    </tr>`;
-                });
-                html += `</table></div>`;
-                document.getElementById('adminData').innerHTML = html;
-
-            } catch (err) {
-                document.getElementById('adminData').innerText = "Connection error dropped.";
-                console.error(err);
-            }
-        }
-
-        function exitAdmin() {
-            showPage('page1');
-        }
-
-        function escapeHtml(text) {
-            return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
-        }
-    </script>
-
-    <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #1e1e2f, #2a2a40);
-            --card-bg: rgba(255, 255, 255, 0.07);
-            --accent-color: #ff6584;
-            --text-color: #ffffff;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-gradient);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            transition: all 0.5s ease-in-out;
-            position: relative;
-        }
-
-        .page {
-            display: none;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        label {
-            display: block;
-            text-align: left;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #ffcbd5;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(0, 0, 0, 0.4);
-            color: #fff;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        button {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 15px;
-            transition: transform 0.2s, background 0.2s;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-            background: #ff476c;
-        }
-
-        .btn-group {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-        }
-
-        .headphone-bg {
-            background-image: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.95) 100%), url('https://unsplash.com');
-            background-size: cover;
-            background-position: center;
-        }
-
-        .secret-admin-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 15px;
-            font-size: 10px;
-            padding: 4px 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            color: rgba(255, 255, 255, 0.4);
-            cursor: pointer;
-            border: none;
-            margin: 0;
-        }
-        
-        .secret-admin-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: none;
-        }
-
-        .admin-table-wrapper {
-            max-height: 250px;
-            overflow-y: auto;
-            margin-top: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
-
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            background: rgba(0,0,0,0.3);
-        }
-
-        .admin-table th, .admin-table td {
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            text-align: left;
-        }
-
-        .admin-table th {
-            background: rgba(255, 255, 255, 0.15);
-            position: sticky;
-            top: 0;
-        }
-    </style>
+    <title>Fellings time 😊💛</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container" id="mainContainer">
-        <!-- PAGE 1 -->
+    <!-- FLOATING BACKGROUND FLOWERS -->
+    <div class="flower-bg top-left">🌸</div>
+    <div class="flower-bg bottom-right">🦋</div>
+    <div class="flower-bg top-right">🌿</div>
+    <div class="flower-bg bottom-left">🪻</div>
+
+    <div class="container">
+        
+        <!-- PAGE 1: NICKNAME ENTRY -->
         <div id="page1" class="page active">
+            <h2>Welcome ✨</h2>
+            <input type="text" id="nickname" placeholder="Enter your nickname...">
+            <button id="nextBtn">Next</button>
+            <button id="adminBtn" class="secret-admin-btn">Admin</button>
+        </div>
+            <!-- NEW SECRET ADMIN LINK FOR JOEL ONLY -->
+            <span class="admin-link" onclick="openAdminPanel()">✨ (For Admin Only) ✨</span>
+        </div>
+
+        <!-- PAGE 2: STATUS CHECK -->
+        <div id="page2" class="page">
+            <h2>Are you alright or not?</h2>
+            <div class="btn-group">
+                <button id="alrightBtn">Alright</button>
+                <button id="notAlrightBtn">Not Alright</button>
+            </div>
+        </div>
+        <!-- PAGE 3: QUESTIONNAIRE -->
+        <div id="page3" class="page">
+            <h2>Tell us more...</h2>
+            
+            <label>1. If you look back at school, who was that one hidden crush you were completely obsessed with, but too shy to ever tell anyone? 💛💛</label>
+            <textarea id="q1" rows="2"></textarea>
+
+            <label>2. What thing makes you happy, but you always act as you don't care?</label>
+            <textarea id="q2" rows="2"></textarea>
+
+            <label>4. What is your most memorable day that you won't forget in your life?</label>
+            <textarea id="q4" rows="2"></textarea>
+
+            <label>5. Who is your crush? ❤️❤️</label>
+            <input type="text" id="q5">
+
+            <button id="submitBtn">Submit</button>
+        </div>
+        
+
+        <!-- PAGE 4: BEAUTIFUL ADMIN POSTCARD PANEL -->
+        <div id="admin-page" class="page">
+            <h2>Garden Subscriptions</h2>
+            <p>Secrets told by Jumamji:</p>
+            <div id="responses-container">
+                <!-- User responses will slide here -->
+            </div>
+            
+            <button onclick="clearAllData()" class="wipe-btn">Clear Jumanji Memory 🗑️</button>
+            <button onclick="goBackToLogin()" class="back-btn">Back to Login</button>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
