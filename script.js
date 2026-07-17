@@ -1,4 +1,4 @@
-// GLOBAL DATABASE SETTINGS (Configured with your exact Project API parameters)
+// GLOBAL DATABASE SETTINGS
 let userNickname = "";
 const BASE_API_URL = "https://snfdxgjnwdihrjcwuess.supabase.co"; 
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmR4Z2pud2RpaHJqY3d1ZXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMTUxNjAsImV4cCI6MjA5OTc5MTE2MH0.N7v89MvBDWLq2gLxHS-LbzptmmE81X7mSZzVqz1GsEg";
@@ -7,10 +7,6 @@ const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
-    
-    if(pageId !== 'page5') {
-        document.getElementById('mainContainer').classList.remove('headphone-bg');
-    }
 }
 
 function goToPage2() {
@@ -26,12 +22,12 @@ function handleStatus(status) {
     if (status === 'alright') {
         showPage('page3');
     } else {
-        document.getElementById('mainContainer').classList.add('headphone-bg');
+        // FIXED: The music page displays perfectly now
         showPage('page5');
         try {
             const song = document.getElementById('sadSong');
             song.currentTime = 0;
-            song.play().catch(e => console.log("Audio requires a manual tap interaction to launch."));
+            song.play().catch(e => console.log("Audio waiting for player tap click."));
         } catch(err) {
             console.log("Audio process bypassed safely.");
         }
@@ -68,7 +64,7 @@ async function submitAnswers() {
         if (response.ok) {
             showPage('page4');
         } else {
-            alert("Error saving answers. Make sure RLS is disabled in your Supabase table settings!");
+            alert("Error saving answers. Check your Supabase RLS and Table name!");
         }
     } catch (err) {
         alert("Database connection dropped.");
@@ -99,7 +95,7 @@ async function fetchAdminData() {
         });
 
         if (!response.ok) {
-            document.getElementById('adminData').innerText = "Failed to pull records.";
+            document.getElementById('adminData').innerText = "Failed to pull records. Check table permissions.";
             return;
         }
 
@@ -144,7 +140,7 @@ function escapeHtml(text) {
     return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
 }
 
-// EVENT LISTENERS BINDING BLOCK (Guarantees script triggers on document completion)
+// EVENT LISTENERS BINDING BLOCK
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("nextBtn").addEventListener("click", goToPage2);
     document.getElementById("adminBtn").addEventListener("click", openAdminModal);
