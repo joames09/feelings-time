@@ -3,18 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fellings time 😊💛</title>
+    <title>Express Your Feelings</title>
+    <!-- Connect to the style sheet -->
     <link rel="stylesheet" href="style.css">
+    <!-- Connect to the javascript engine -->
+    <script src="script.js" defer></script>
 </head>
 <body>
 
-    <!-- FLOATING BACKGROUND FLOWERS -->
-    <div class="flower-bg top-left">🌸</div>
-    <div class="flower-bg bottom-right">🦋</div>
-    <div class="flower-bg top-right">🌿</div>
-    <div class="flower-bg bottom-left">🪻</div>
-
-    <div class="container">
+    <div class="container" id="mainContainer">
         
         <!-- PAGE 1: NICKNAME ENTRY -->
         <div id="page1" class="page active">
@@ -22,9 +19,6 @@
             <input type="text" id="nickname" placeholder="Enter your nickname...">
             <button id="nextBtn">Next</button>
             <button id="adminBtn" class="secret-admin-btn">Admin</button>
-        </div>
-            <!-- NEW SECRET ADMIN LINK FOR JOEL ONLY -->
-            <span class="admin-link" onclick="openAdminPanel()">✨ (For Admin Only) ✨</span>
         </div>
 
         <!-- PAGE 2: STATUS CHECK -->
@@ -35,6 +29,7 @@
                 <button id="notAlrightBtn">Not Alright</button>
             </div>
         </div>
+
         <!-- PAGE 3: QUESTIONNAIRE -->
         <div id="page3" class="page">
             <h2>Tell us more...</h2>
@@ -53,22 +48,31 @@
 
             <button id="submitBtn">Submit</button>
         </div>
-        
 
-        <!-- PAGE 4: BEAUTIFUL ADMIN POSTCARD PANEL -->
-        <div id="admin-page" class="page">
-            <h2>Garden Subscriptions</h2>
-            <p>Secrets told by Jumamji:</p>
-            <div id="responses-container">
-                <!-- User responses will slide here -->
-            </div>
-            
-            <button onclick="clearAllData()" class="wipe-btn">Clear Jumanji Memory 🗑️</button>
-            <button onclick="goBackToLogin()" class="back-btn">Back to Login</button>
+        <!-- PAGE 4: SMILE ALWAYS -->
+        <div id="page4" class="page">
+            <h1 style="font-size: 40px;">smile always 🙂🙂</h1>
+        </div>
+
+        <!-- PAGE 5: NOT ALRIGHT (MUSIC & AUDIO PLAYER) -->
+        <div id="page5" class="page">
+            <h2>Take a deep breath and listen... 🎧</h2>
+            <p>Music is playing in the background to comfort you.</p>
+            <audio id="sadSong" loop>
+                <source src="https://snfdxgjnwdihrjcwuess.supabase.co/storage/v1/object/public/music/feelings.mp3.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <button id="backBtn">Go Back</button>
+        </div>
+
+        <!-- PAGE 6: ADMIN RESPONSES VIEW -->
+        <div id="page6" class="page">
+            <h2>Admin Dashboard</h2>
+            <div id="adminData">Loading responses...</div>
+            <button id="exitAdminBtn" style="background: #555;">Exit Admin</button>
         </div>
 
     </div>
 
-    <script src="script.js"></script>
 </body>
 </html>
