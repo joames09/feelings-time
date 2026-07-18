@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Express Your Feelings</title>
-    
-    <!-- 1. The Core Database toolkit loads completely first -->
+    <!-- Include Supabase JS Library -->
     <script src="https://jsdelivr.net"></script>
-    
-    <!-- 2. Your custom styles look up second -->
+    <!-- Link to your CSS file -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,7 +15,7 @@
         
         <!-- PAGE 1: NICKNAME INPUT -->
         <div id="page1" class="page active">
-            <!-- Hidden Secret Box in the Top Right Corner -->
+            <!-- Secret Trigger placed at top right corner -->
             <div class="secret-admin-trigger" onclick="openAdminAuth()">✨</div>
 
             <h1>Welcome Friend ✨</h1>
@@ -55,19 +53,19 @@
             <button onclick="submitResponses()">Submit Answers</button>
         </div>
 
-        <!-- PAGE 4: SMILE ALWAYS -->
+        <!-- PAGE 4: SMILE ALWAYS (SUCCESS SCREEN) -->
         <div id="page4" class="page">
             <div class="smile-text">smile always 🙂🙂</div>
             <p class="success-note">Thank you for opening up and sharing your heart.</p>
         </div>
 
-        <!-- PAGE 5: NOT ALRIGHT (MUSIC SCREEN) -->
+        <!-- PAGE 5: NOT ALRIGHT (MUSIC SCREEN WITH HEADPHONE BG) -->
         <div id="page5" class="page">
             <h1>Take a deep breath... 🎧</h1>
             <p>Close your eyes, put on your headphones, and let the music comfort your soul.</p>
             
             <audio id="sadAudio" controls class="audio-player">
-                <source src="https://snfdxgjnwdihrjcwuess.supabase.co/storage/v1/object/public/music/reality.mp3" type="audio/mpeg">
+                <source src="https://supabase.co" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
             <button onclick="resetApp()" class="btn-back">Go Back</button>
@@ -94,7 +92,7 @@
 
     </div>
 
-    <!-- 3. Your custom logic runs cleanly here at the very bottom -->
+    <!-- Link to your JavaScript file -->
     <script src="script.js"></script>
 </body>
 </html>
