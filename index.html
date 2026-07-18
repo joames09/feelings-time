@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Express Your Feelings</title>
-    <!-- Include Supabase JS Library -->
-   <script src="https://jsdelivr.net" defer></script>
-    <!-- Link to your CSS file -->
+    
+    <!-- 1. The Core Database toolkit loads completely first -->
+    <script src="https://jsdelivr.net"></script>
+    
+    <!-- 2. Your custom styles look up second -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +17,7 @@
         
         <!-- PAGE 1: NICKNAME INPUT -->
         <div id="page1" class="page active">
-            <!-- Secret Trigger placed at top right corner -->
+            <!-- Hidden Secret Box in the Top Right Corner -->
             <div class="secret-admin-trigger" onclick="openAdminAuth()">✨</div>
 
             <h1>Welcome Friend ✨</h1>
@@ -53,13 +55,13 @@
             <button onclick="submitResponses()">Submit Answers</button>
         </div>
 
-        <!-- PAGE 4: SMILE ALWAYS (SUCCESS SCREEN) -->
+        <!-- PAGE 4: SMILE ALWAYS -->
         <div id="page4" class="page">
             <div class="smile-text">smile always 🙂🙂</div>
             <p class="success-note">Thank you for opening up and sharing your heart.</p>
         </div>
 
-        <!-- PAGE 5: NOT ALRIGHT (MUSIC SCREEN WITH HEADPHONE BG) -->
+        <!-- PAGE 5: NOT ALRIGHT (MUSIC SCREEN) -->
         <div id="page5" class="page">
             <h1>Take a deep breath... 🎧</h1>
             <p>Close your eyes, put on your headphones, and let the music comfort your soul.</p>
@@ -92,7 +94,7 @@
 
     </div>
 
-    <!-- Link to your JavaScript file -->
+    <!-- 3. Your custom logic runs cleanly here at the very bottom -->
     <script src="script.js"></script>
 </body>
 </html>
