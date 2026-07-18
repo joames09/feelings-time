@@ -1,0 +1,183 @@
+:root {
+    --bg-gradient: linear-gradient(135deg, #1e1e2f, #2a2a40);
+    --accent-yellow: #f1c40f;
+    --accent-pink: #ff4757;
+    --accent-blue: #54a0ff;
+    --text-light: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: var(--bg-gradient);
+    color: var(--text-light);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 500px;
+    background: var(--card-bg);
+    padding: 40px 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+    position: relative;
+    transition: all 0.5s ease;
+}
+
+/* Essential for page separation */
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Typography */
+h1 { margin-bottom: 20px; font-weight: 600; font-size: 1.8rem; }
+p { margin-bottom: 25px; color: #ccc; font-size: 1rem; line-height: 1.5; }
+#userGreeting { color: var(--accent-blue); }
+.quest-title { color: var(--accent-yellow); font-size: 1.5rem; margin-bottom: 15px; }
+.success-note { margin-top: 20px; }
+
+/* Inputs & Textareas */
+input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+input:focus, textarea:focus {
+    background: rgba(255,255,255,0.2);
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+}
+
+textarea { height: 80px; resize: none; }
+
+/* Buttons */
+button {
+    background: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    font-size: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s ease;
+    width: 100%;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(84, 160, 255, 0.4);
+}
+
+/* Question Labels */
+.q-label {
+    text-align: left;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    color: #f1f1f1;
+}
+
+.choice-buttons {
+    display: flex;
+    gap: 15px;
+}
+.btn-alright { background: #2ed573; }
+.btn-alright:hover { box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4); }
+.btn-not-alright { background: #ff4757; }
+.btn-not-alright:hover { box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); }
+
+/* Headphone Background Override */
+body.headphone-bg {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.65) 100%, rgba(0,0,0,0.85) 100%), 
+                      url('https://unsplash.com');
+    background-size: cover;
+    background-position: center;
+}
+
+.audio-player { width: 100%; margin-top: 10px; }
+.btn-back { margin-top: 20px; background: transparent; border: 1px solid white; }
+.btn-cancel { margin-top: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.2); }
+.btn-logout { margin-top: 20px; background: var(--accent-pink); }
+
+/* SECRET ADMIN AREA (Top Right Corner) */
+.secret-admin-trigger {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.03); 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    transition: 0.2s;
+}
+.secret-admin-trigger:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Admin Layout Display */
+.admin-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    text-align: left;
+    margin-top: 15px;
+    padding-right: 5px;
+}
+.response-card {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--accent-blue);
+}
+.response-card h3 { color: var(--accent-yellow); margin-bottom: 8px; font-size: 1.1rem;}
+.response-card p { margin-bottom: 5px; font-size: 0.9rem; color: #ddd; line-height: 1.4;}
+
+.smile-text {
+    font-size: 2.5rem;
+    color: var(--accent-yellow);
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
