@@ -52,33 +52,29 @@ function goToSadPage() {
     });
 }
 
-// Data Submission
+// Optimized Instant-Data Submission
 async function submitResponses() {
     const q1Val = document.getElementById('q1').value.trim();
     const q2Val = document.getElementById('q2').value.trim();
     const q4Val = document.getElementById('q4').value.trim();
     const q5Val = document.getElementById('q5').value.trim();
 
-    if (!supabase) {
-        alert("Database keys missing! Moving to local simulation layout.");
-        showPage('page4');
-        return;
-    }
+    // 1. Move to success screen instantly so the user experiences zero lag!
+    showPage('page4');
 
+    if (!supabase) return;
+
+    // 2. Process database injection silently in the background
     try {
-        const { data, error } = await supabase
+        await supabase
           .from('user_responses')
           .insert([
             { nickname: currentNickname, q1: q1Val, q2: q2Val, q4: q4Val, q5: q5Val }
           ]);
-
-        if (error) throw error;
-        showPage('page4');
     } catch (err) {
-        alert("Error saving data: " + err.message);
+        console.error("Background save failed: " + err.message);
     }
 }
-
 // Admin Framework
 function openAdminAuth() {
     showPage('pageAdminAuth');
