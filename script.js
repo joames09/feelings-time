@@ -1,6 +1,6 @@
 // --- SUPABASE CONFIGURATION ---
-const SUPABASE_URL = "https://supabase.co"; 
-const SUPABASE_ANON_KEY = "PASTE_YOUR_ACTUAL_LONG_ANON_KEY_HERE";
+const SUPABASE_URL = "https://snfdxgjnwdihrjcwuess.supabase.co"; 
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmR4Z2pud2RpaHJqY3d1ZXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMTUxNjAsImV4cCI6MjA5OTc5MTE2MH0.N7v89MvBDWLq2gLxHS-LbzptmmE81X7mSZzVqz1GsEg";
 
 // This variable will hold our connection safely
 let supabaseInstance = null;
@@ -55,29 +55,29 @@ function goToSadPage() {
     });
 }
 
-// Data Submission
+// Optimized Instant-Data Submission
 async function submitResponses() {
     const q1Val = document.getElementById('q1').value.trim();
     const q2Val = document.getElementById('q2').value.trim();
     const q4Val = document.getElementById('q4').value.trim();
     const q5Val = document.getElementById('q5').value.trim();
 
+    // 1. Move to success screen instantly so the user experiences zero lag!
     showPage('page4');
 
-    const db = getSupabase();
-    if (!db) return;
+    if (!supabase) return;
 
+    // 2. Process database injection silently in the background
     try {
-        await db
+        await supabase
           .from('user_responses')
           .insert([
             { nickname: currentNickname, q1: q1Val, q2: q2Val, q4: q4Val, q5: q5Val }
           ]);
     } catch (err) {
-        console.error("Save error: " + err.message);
+        console.error("Background save failed: " + err.message);
     }
 }
-
 // Admin Framework
 function openAdminAuth() {
     showPage('pageAdminAuth');
