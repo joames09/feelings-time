@@ -119,14 +119,13 @@ button:hover {
 .btn-not-alright { background: #ff4757; }
 .btn-not-alright:hover { box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); }
 
-/* Headphone Background Override */
+/* Optimized Headphone Background Override */
 body.headphone-bg {
-    background-image: radial-gradient(circle, rgba(0,0,0,0.65) 100%, rgba(0,0,0,0.85) 100%), 
-                      url('https://unsplash.com');
+    background-image: radial-gradient(circle, rgba(0,0,0,0.7) 100%, rgba(0,0,0,0.9) 100%), 
+                      url('https://unsplash.com'); /* Compressed dimensions */
     background-size: cover;
     background-position: center;
 }
-
 .audio-player { width: 100%; margin-top: 10px; }
 .btn-back { margin-top: 20px; background: transparent; border: 1px solid white; }
 .btn-cancel { margin-top: 10px; background: transparent; border: 1px solid rgba(255,255,255,0.2); }
