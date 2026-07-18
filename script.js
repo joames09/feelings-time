@@ -3,16 +3,8 @@
 const SUPABASE_URL = "https://snfdxgjnwdihrjcwuess.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmR4Z2pud2RpaHJqY3d1ZXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMTUxNjAsImV4cCI6MjA5OTc5MTE2MH0.N7v89MvBDWLq2gLxHS-LbzptmmE81X7mSZzVqz1GsEg";
 
-let supabase = null;
-
-// Safety Switch: Checks for valid database keys
-if (SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY") {
-    try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch(e) {
-        console.error("Supabase connection error: ", e);
-    }
-}
+// This initializes the connection to your database using the keys above
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentNickname = "";
 
@@ -59,12 +51,10 @@ async function submitResponses() {
     const q4Val = document.getElementById('q4').value.trim();
     const q5Val = document.getElementById('q5').value.trim();
 
-    // 1. Move to success screen instantly so the user experiences zero lag!
+    // Move to success screen instantly so the user experiences zero lag!
     showPage('page4');
 
-    if (!supabase) return;
-
-    // 2. Process database injection silently in the background
+    // Process database injection silently in the background
     try {
         await supabase
           .from('user_responses')
@@ -75,6 +65,7 @@ async function submitResponses() {
         console.error("Background save failed: " + err.message);
     }
 }
+
 // Admin Framework
 function openAdminAuth() {
     showPage('pageAdminAuth');
@@ -91,13 +82,6 @@ function verifyAdminPassword() {
 }
 
 async function loadAdminData() {
-    if (!supabase) {
-        alert("Database keys missing.");
-        showPage('pageAdminDashboard');
-        document.getElementById('adminDataOutput').innerHTML = "<p>Please add your valid Supabase project details to see entries.</p>";
-        return;
-    }
-
     try {
         const { data, error } = await supabase
             .from('user_responses')
@@ -110,7 +94,7 @@ async function loadAdminData() {
         displayArea.innerHTML = ""; 
 
         if(data.length === 0) {
-            displayArea.innerHTML = "<p>No entries recorded yet.</p>";
+            displayArea.innerHTML = "<p style='color:#ccc; margin-top:10px;'>No entries recorded yet.</p>";
         } else {
             data.forEach(item => {
                 const card = document.createElement('div');
