@@ -1,9 +1,21 @@
 // --- SUPABASE CONFIGURATION ---
-const SUPABASE_URL = "https://snfdxgjnwdihrjcwuess.supabase.co"; 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmR4Z2pud2RpaHJqY3d1ZXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMTUxNjAsImV4cCI6MjA5OTc5MTE2MH0.N7v89MvBDWLq2gLxHS-LbzptmmE81X7mSZzVqz1GsEg";
+const SUPABASE_URL = "https://supabase.co"; 
+const SUPABASE_ANON_KEY = "PASTE_YOUR_ACTUAL_LONG_ANON_KEY_HERE";
 
-// Initialize connection safely right away
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// This variable will hold our connection safely
+let supabaseInstance = null;
+
+// Function to safely initialize Supabase only when needed
+function getSupabase() {
+    if (!supabaseInstance) {
+        if (typeof window.supabase !== 'undefined') {
+            supabaseInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.error("Supabase library hasn't loaded from the internet yet!");
+        }
+    }
+    return supabaseInstance;
+}
 
 let currentNickname = "";
 
@@ -52,8 +64,11 @@ async function submitResponses() {
 
     showPage('page4');
 
+    const db = getSupabase();
+    if (!db) return;
+
     try {
-        await supabase
+        await db
           .from('user_responses')
           .insert([
             { nickname: currentNickname, q1: q1Val, q2: q2Val, q4: q4Val, q5: q5Val }
@@ -79,8 +94,14 @@ function verifyAdminPassword() {
 }
 
 async function loadAdminData() {
+    const db = getSupabase();
+    if (!db) {
+        alert("Supabase is still loading from the internet. Please wait 3 seconds and try again!");
+        return;
+    }
+
     try {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('user_responses')
             .select('*')
             .order('created_at', { ascending: false });
