@@ -31,10 +31,11 @@
             justify-content: center;
             align-items: center;
             overflow-x: hidden;
+            padding: 20px;
         }
 
         .container {
-            width: 90%;
+            width: 100%;
             max-width: 500px;
             background: var(--card-bg);
             padding: 40px 30px;
@@ -47,6 +48,7 @@
             transition: all 0.5s ease;
         }
 
+        /* Essential for page separation */
         .page {
             display: none;
         }
@@ -61,11 +63,11 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Typography & Decor */
+        /* Typography */
         h1 { margin-bottom: 20px; font-weight: 600; font-size: 1.8rem; }
         p { margin-bottom: 25px; color: #ccc; font-size: 1rem; line-height: 1.5; }
         
-        /* Inputs & Buttons */
+        /* Inputs & Textareas */
         input[type="text"], input[type="password"], textarea {
             width: 100%;
             padding: 15px;
@@ -113,7 +115,6 @@
             color: #f1f1f1;
         }
 
-        /* Page Specific Styles */
         .choice-buttons {
             display: flex;
             gap: 15px;
@@ -123,31 +124,42 @@
         .btn-not-alright { background: #ff4757; }
         .btn-not-alright:hover { box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); }
 
-        /* Headphone Sad Page Background Override */
-        .headphone-bg {
-            background-image: radial-gradient(circle, rgba(0,0,0,0.6) 100%, rgba(0,0,0,0.8) 100%), 
+        /* Headphone Background Override */
+        body.headphone-bg {
+            background-image: radial-gradient(circle, rgba(0,0,0,0.65) 100%, rgba(0,0,0,0.85) 100%), 
                               url('https://unsplash.com');
             background-size: cover;
             background-position: center;
         }
 
-        /* Secret Admin Entry */
+        /* SECRET ADMIN AREA (Top Right Corner) */
         .secret-admin-trigger {
             position: absolute;
-            bottom: 10px;
+            top: 15px;
             right: 15px;
-            width: 10px;
-            height: 10px;
+            width: 45px;
+            height: 45px;
             cursor: pointer;
-            opacity: 0.2;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.03); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            transition: 0.2s;
+        }
+        .secret-admin-trigger:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Admin Table Grid */
+        /* Admin Layout Display */
         .admin-table-container {
             max-height: 400px;
             overflow-y: auto;
             text-align: left;
             margin-top: 15px;
+            padding-right: 5px;
         }
         .response-card {
             background: rgba(255,255,255,0.05);
@@ -157,7 +169,7 @@
             border-left: 4px solid var(--accent-blue);
         }
         .response-card h3 { color: var(--accent-yellow); margin-bottom: 8px; font-size: 1.1rem;}
-        .response-card p { margin-bottom: 5px; font-size: 0.9rem; color: #ddd;}
+        .response-card p { margin-bottom: 5px; font-size: 0.9rem; color: #ddd; line-height: 1.4;}
 
         .smile-text {
             font-size: 2.5rem;
@@ -177,12 +189,13 @@
         
         <!-- PAGE 1: NICKNAME INPUT -->
         <div id="page1" class="page active">
+            <!-- Secret Trigger placed at top right corner -->
+            <div class="secret-admin-trigger" onclick="openAdminAuth()">✨</div>
+
             <h1>Welcome Friend ✨</h1>
             <p>Before we start, let me get to know you a little better.</p>
             <input type="text" id="nicknameInput" placeholder="Enter your nickname...">
             <button onclick="goToPage2()">Next</button>
-            <!-- Secret Area -->
-            <div class="secret-admin-trigger" onclick="openAdminAuth()"></div>
         </div>
 
         <!-- PAGE 2: STATUS CHECK -->
@@ -199,55 +212,55 @@
         <div id="page3" class="page">
             <h1 style="color:var(--accent-yellow); font-size:1.5rem; margin-bottom:15px;">Let's express your thoughts 💭</h1>
             
-            <label class="q-label">1. Looking back at school, who was that one hidden crush you were completely obsessed with, but too shy to tell? 💛💛</label>
+            <label class="q-label">1. If you look back at school, who was that one hidden crush you were completely obsessed with, but too shy to ever tell anyone? 💛💛</label>
             <textarea id="q1" placeholder="Type your secret crush..."></textarea>
 
             <label class="q-label">2. What thing makes you happy, but you always act like you don't care?</label>
             <textarea id="q2" placeholder="Your hidden joy..."></textarea>
 
-            <label class="q-label">4. What is the most memorable day that you won't forget in your life?</label>
+            <label class="q-label">4. What is your most memorable day that you won't forget in your life?</label>
             <textarea id="q4" placeholder="Describe that unforgettable day..."></textarea>
 
-            <label class="q-label">5. Who is your current crush? ❤️❤️</label>
-            <textarea id="q5" placeholder="Type their name or initials..."></textarea>
+            <label class="q-label">5. Who is your crush? ❤️❤️</label>
+            <textarea id="q5" placeholder="Type their name..."></textarea>
 
             <button onclick="submitResponses()">Submit Answers</button>
         </div>
 
-        <!-- PAGE 4: SMILE ALWAYS (SUCCESS) -->
+        <!-- PAGE 4: SMILE ALWAYS (SUCCESS SCREEN) -->
         <div id="page4" class="page">
             <div class="smile-text">smile always 🙂🙂</div>
             <p style="margin-top: 20px;">Thank you for opening up and sharing your heart.</p>
         </div>
 
-        <!-- PAGE 5: NOT ALRIGHT (MUSIC) -->
+        <!-- PAGE 5: NOT ALRIGHT (MUSIC SCREEN WITH HEADPHONE BG) -->
         <div id="page5" class="page">
             <h1>Take a deep breath... 🎧</h1>
             <p>Close your eyes, put on your headphones, and let the music comfort your soul.</p>
             
-            <!-- Replace the src URL with your direct music track link (.mp3) -->
+            <!-- Your working Supabase audio file link -->
             <audio id="sadAudio" controls style="width: 100%; margin-top: 10px;">
-                <source src="https://snfdxgjnwdihrjcwuess.supabase.co/storage/v1/object/public/music/feelings.mp3" type="audio/mpeg">
+                <source src="https://snfdxgjnwdihrjcwuess.supabase.co/storage/v1/object/public/music/reality.mp3" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
             <button onclick="resetApp()" style="margin-top:20px; background:transparent; border:1px solid white;">Go Back</button>
         </div>
 
-        <!-- ADMIN AUTH PAGE -->
+        <!-- ADMIN GATEKEEP PAGE -->
         <div id="pageAdminAuth" class="page">
             <h1>Admin Verification</h1>
             <p>Enter your secret key to continue.</p>
             <input type="password" id="adminPassword" placeholder="Enter password...">
             <button onclick="verifyAdminPassword()">Login</button>
-            <button onclick="resetApp()" style="margin-top:10px; background:transparent;">Cancel</button>
+            <button onclick="resetApp()" style="margin-top:10px; background:transparent; border:1px solid rgba(255,255,255,0.2);">Cancel</button>
         </div>
 
-        <!-- ADMIN DASHBOARD -->
+        <!-- ADMIN DATA DASHBOARD -->
         <div id="pageAdminDashboard" class="page">
             <h1>Admin Dashboard 📊</h1>
-            <p>Viewing all submitted system confessions.</p>
+            <p>Viewing all submitted confessions.</p>
             <div class="admin-table-container" id="adminDataOutput">
-                <!-- Data injected dynamically -->
+                <!-- Records appear here dynamically -->
             </div>
             <button onclick="resetApp()" style="margin-top:20px; background:var(--accent-pink);">Logout</button>
         </div>
@@ -256,16 +269,3 @@
 
     <script>
         // --- SUPABASE CONFIGURATION ---
-        // REPLACE THESE TWO VALUES WITH YOUR ACTUAL PROJECT VALUES FROM THE SUPABASE DASHBOARD
-        const SUPABASE_URL = "snfdxgjnwdihrjcwuess"; 
-        const SUPABASE_ANON_KEY = "sb_publishable_sG_CpYhaZynQ3t4nARNngA_QShTkxYT";
-
-        const supabase = imglySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // --- STATE MANAGEMENT ---
-        let currentNickname = "";
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            
