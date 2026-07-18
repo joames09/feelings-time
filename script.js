@@ -1,9 +1,8 @@
 // --- SUPABASE CONFIGURATION ---
-// Paste your actual project values here to make data storage real!
 const SUPABASE_URL = "https://snfdxgjnwdihrjcwuess.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmR4Z2pud2RpaHJqY3d1ZXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMTUxNjAsImV4cCI6MjA5OTc5MTE2MH0.N7v89MvBDWLq2gLxHS-LbzptmmE81X7mSZzVqz1GsEg";
 
-// This initializes the connection to your database using the keys above
+// Initializing connection
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentNickname = "";
@@ -40,7 +39,7 @@ function goToSadPage() {
     const audio = document.getElementById('sadAudio');
     audio.currentTime = 0;
     audio.play().catch(e => {
-        console.log("Audio block active. Manual play triggered via fallback UI.");
+        console.log("Audio play caught.");
     });
 }
 
@@ -51,10 +50,8 @@ async function submitResponses() {
     const q4Val = document.getElementById('q4').value.trim();
     const q5Val = document.getElementById('q5').value.trim();
 
-    // Move to success screen instantly so the user experiences zero lag!
     showPage('page4');
 
-    // Process database injection silently in the background
     try {
         await supabase
           .from('user_responses')
@@ -62,7 +59,7 @@ async function submitResponses() {
             { nickname: currentNickname, q1: q1Val, q2: q2Val, q4: q4Val, q5: q5Val }
           ]);
     } catch (err) {
-        console.error("Background save failed: " + err.message);
+        console.error("Save error: " + err.message);
     }
 }
 
@@ -93,7 +90,7 @@ async function loadAdminData() {
         const displayArea = document.getElementById('adminDataOutput');
         displayArea.innerHTML = ""; 
 
-        if(data.length === 0) {
+        if(!data || data.length === 0) {
             displayArea.innerHTML = "<p style='color:#ccc; margin-top:10px;'>No entries recorded yet.</p>";
         } else {
             data.forEach(item => {
