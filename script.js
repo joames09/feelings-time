@@ -2,20 +2,20 @@
 const SUPABASE_URL = "https://snfdxgjnwdihrjcwuess.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_sG_CpYhaZynQ3t4nARNngA_QShTkxYT";
 
-// This variable will hold our connection safely
-let supabaseInstance = null;
+let db = null;
 
-// Function to safely initialize Supabase only when needed
-function getSupabase() {
-    if (!supabaseInstance) {
-        if (typeof window.supabase !== 'undefined') {
-            supabaseInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } else {
-            console.error("Supabase library hasn't loaded from the internet yet!");
-        }
+// Initialize automatically on startup
+window.addEventListener('DOMContentLoaded', () => {
+    // Check both standard library variants (case sensitivity fallback)
+    const supabaseLib = window.supabase || window.Supabase;
+    
+    if (supabaseLib) {
+        db = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("Supabase connected successfully!");
+    } else {
+        console.error("Critical: Supabase script block was blocked by your browser network.");
     }
-    return supabaseInstance;
-}
+});
 
 let currentNickname = "";
 
@@ -62,17 +62,15 @@ async function submitResponses() {
     const q4Val = document.getElementById('q4').value.trim();
     const q5Val = document.getElementById('q5').value.trim();
 
-    // 1. Move to success screen instantly so the user experiences zero lag!
+    // Move to success screen instantly so the user experiences zero lag!
     showPage('page4');
 
-    // Safely retrieve our working Supabase engine link
-    const db = getSupabase();
     if (!db) {
-        console.error("Database connection missing. Background save failed.");
+        console.error("Database connection missing. Background save dropped.");
         return;
     }
 
-    // 2. Process database injection silently in the background using your actual database columns
+    // Process database injection silently in the background
     try {
         await db
           .from('user_responses')
@@ -106,14 +104,12 @@ function verifyAdminPassword() {
 }
 
 async function loadAdminData() {
-    const db = getSupabase();
     if (!db) {
-        alert("Supabase is still loading from the internet. Please wait 3 seconds and try again!");
+        alert("Your website cannot connect to the internet database right now. Please refresh and try again!");
         return;
     }
 
     try {
-        // Fetch all columns from your user_responses table
         const { data, error } = await db
             .from('user_responses')
             .select('*')
@@ -127,7 +123,6 @@ async function loadAdminData() {
         if(!data || data.length === 0) {
             displayArea.innerHTML = "<p style='color:#ccc; margin-top:10px;'>No entries recorded yet.</p>";
         } else {
-            // Read columns matching your specific database mapping schema
             data.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'response-card';
@@ -147,7 +142,6 @@ async function loadAdminData() {
     }
 }
 
-// Security cleaner to prevent bad text layouts
 function escapeHtml(str) {
     if(!str) return "";
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
