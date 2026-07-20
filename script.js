@@ -1,5 +1,5 @@
 // --- SUPABASE CONFIGURATION ---
-const SUPABASE_URL = "snfdxgjnwdihrjcwuess"; 
+const SUPABASE_URL = "https://snfdxgjnwdihrjcwuess.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_sG_CpYhaZynQ3t4nARNngA_QShTkxYT";
 
 // This variable will hold our connection safely
@@ -65,19 +65,31 @@ async function submitResponses() {
     // 1. Move to success screen instantly so the user experiences zero lag!
     showPage('page4');
 
-    if (!supabase) return;
+    // Safely retrieve our working Supabase engine link
+    const db = getSupabase();
+    if (!db) {
+        console.error("Database connection missing. Background save failed.");
+        return;
+    }
 
-    // 2. Process database injection silently in the background
+    // 2. Process database injection silently in the background using your actual database columns
     try {
-        await supabase
+        await db
           .from('user_responses')
           .insert([
-            { nickname: currentNickname, q1: q1Val, q2: q2Val, q4: q4Val, q5: q5Val }
+            { 
+                nickname: currentNickname, 
+                hidden_crush: q1Val, 
+                secret_happiness: q2Val, 
+                memorable_day: q4Val, 
+                current_crush: q5Val 
+            }
           ]);
     } catch (err) {
         console.error("Background save failed: " + err.message);
     }
 }
+
 // Admin Framework
 function openAdminAuth() {
     showPage('pageAdminAuth');
@@ -101,6 +113,7 @@ async function loadAdminData() {
     }
 
     try {
+        // Fetch all columns from your user_responses table
         const { data, error } = await db
             .from('user_responses')
             .select('*')
@@ -114,15 +127,16 @@ async function loadAdminData() {
         if(!data || data.length === 0) {
             displayArea.innerHTML = "<p style='color:#ccc; margin-top:10px;'>No entries recorded yet.</p>";
         } else {
+            // Read columns matching your specific database mapping schema
             data.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'response-card';
                 card.innerHTML = `
-                    <h3>User: ${item.nickname}</h3>
-                    <p><strong>1. School Crush:</strong> ${item.q1 || 'N/A'}</p>
-                    <p><strong>2. Hidden Happy:</strong> ${item.q2 || 'N/A'}</p>
-                    <p><strong>4. Memorable Day:</strong> ${item.q4 || 'N/A'}</p>
-                    <p><strong>5. Current Crush:</strong> ${item.q5 || 'N/A'}</p>
+                    <h3>User: ${escapeHtml(item.nickname)}</h3>
+                    <p><strong>1. School Crush:</strong> ${escapeHtml(item.hidden_crush) || 'N/A'}</p>
+                    <p><strong>2. Hidden Happy:</strong> ${escapeHtml(item.secret_happiness) || 'N/A'}</p>
+                    <p><strong>4. Memorable Day:</strong> ${escapeHtml(item.memorable_day) || 'N/A'}</p>
+                    <p><strong>5. Current Crush:</strong> ${escapeHtml(item.current_crush) || 'N/A'}</p>
                 `;
                 displayArea.appendChild(card);
             });
@@ -131,6 +145,12 @@ async function loadAdminData() {
     } catch (err) {
         alert("Failed to grab admin details: " + err.message);
     }
+}
+
+// Security cleaner to prevent bad text layouts
+function escapeHtml(str) {
+    if(!str) return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
 function resetApp() {
