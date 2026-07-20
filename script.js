@@ -62,15 +62,10 @@ async function submitResponses() {
     const q4Val = document.getElementById('q4').value.trim();
     const q5Val = document.getElementById('q5').value.trim();
 
-    // Move to success screen instantly so the user experiences zero lag!
-    showPage('page4');
+    showPage('page4'); // Switch screen
 
-    if (!db) {
-        console.error("Database connection missing. Background save dropped.");
-        return;
-    }
+    if (!db) return;
 
-    // Process database injection silently in the background
     try {
         await db
           .from('user_responses')
@@ -84,11 +79,11 @@ async function submitResponses() {
             }
           ]);
     } catch (err) {
-        console.error("Background save failed: " + err.message);
+        console.error("Database save failed: " + err.message);
     }
 }
 
-// Admin Framework
+ Framework
 function openAdminAuth() {
     showPage('pageAdminAuth');
 }
