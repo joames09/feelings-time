@@ -2,229 +2,224 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#ff5722">
-<title>FoodFast — Order & Sell Food Fast</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FoodFast Admin — Control Center</title>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-<script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  * { margin:0; padding:0; box-sizing:border-box; }
   :root {
-    --primary:#ff5722; --primary-dark:#e64a19; --primary-light:#fff3e0;
-    --secondary:#ffc107; --bg:#f5f5f5; --card:#ffffff; --text:#1a1a1a; --text-light:#757575;
-    --border:#e8e8e8; --success:#22c55e; --danger:#ef4444; --warn:#f59e0b; --info:#3b82f6;
-    --shadow:0 2px 10px rgba(0,0,0,0.06); --shadow-lg:0 10px 30px rgba(0,0,0,0.12);
-    --radius:14px;
+    --primary:#ff5722; --primary-dark:#e64a19;
+    --bg:#0f1115; --bg2:#171a21; --card:#1c2028; --card2:#232833;
+    --text:#e8eaed; --text-dim:#9aa3b2; --border:#2b303b;
+    --success:#22c55e; --danger:#ef4444; --warn:#f59e0b; --info:#3b82f6; --accent:#8b5cf6;
+    --shadow:0 4px 20px rgba(0,0,0,0.35);
   }
-  html,body { font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
-  button { font-family:inherit; cursor:pointer; }
-  input,textarea,select { font-family:inherit; }
-  img { max-width:100%; display:block; }
-  .app { max-width:500px; margin:0 auto; min-height:100vh; background:var(--bg); position:relative; padding-bottom:84px; }
-  .app.no-nav { padding-bottom:0; }
+  body { font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+  a { color:var(--primary); }
 
-  .header { background:var(--primary); color:white; padding:14px 18px; position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(255,87,34,0.2); }
-  .header .logo { display:flex; align-items:center; gap:10px; }
-  .header .logo-icon { font-size:24px; }
-  .header h1 { font-size:18px; font-weight:800; letter-spacing:-0.4px; }
-  .header .hdr-btn { background:rgba(255,255,255,0.18); border:none; color:white; padding:7px 13px; border-radius:9px; font-size:12px; font-weight:700; }
-  .header .back-btn { background:rgba(255,255,255,0.18); border:none; color:white; width:34px; height:34px; border-radius:9px; font-size:18px; display:flex; align-items:center; justify-content:center; }
+  .sidebar { width:250px; background:var(--bg2); border-right:1px solid var(--border); padding:22px 0; position:fixed; top:0; bottom:0; left:0; display:flex; flex-direction:column; z-index:100; }
+  .sidebar .brand { padding:0 22px 22px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  .sidebar .brand .logo { width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, var(--primary), #ff9800); display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .sidebar .brand h1 { font-size:17px; font-weight:800; letter-spacing:-0.3px; }
+  .sidebar .brand small { display:block; font-size:10px; color:var(--text-dim); font-weight:500; letter-spacing:0.5px; }
+  .sidebar nav { flex:1; padding:14px 0; overflow-y:auto; }
+  .nav-item { display:flex; align-items:center; gap:12px; padding:11px 22px; cursor:pointer; color:var(--text-dim); font-size:14px; font-weight:500; border-left:3px solid transparent; transition:all 0.15s; }
+  .nav-item:hover { background:var(--card); color:var(--text); }
+  .nav-item.active { background:var(--card); color:var(--text); border-left-color:var(--primary); }
+  .nav-item .ico { font-size:17px; width:20px; text-align:center; }
+  .nav-item .count { margin-left:auto; background:var(--primary); color:white; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; min-width:20px; text-align:center; }
+  .nav-item .count.danger { background:var(--danger); }
+  .nav-item .count.warn { background:var(--warn); color:#1a1a1a; }
+  .sidebar .footer { padding:14px 22px; border-top:1px solid var(--border); font-size:12px; color:var(--text-dim); }
+  .sidebar .footer .admin-name { color:var(--text); font-weight:700; margin-bottom:6px; }
 
-  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:500px; background:white; display:flex; border-top:1px solid var(--border); box-shadow:0 -3px 14px rgba(0,0,0,0.05); z-index:100; padding-bottom:env(safe-area-inset-bottom, 0); }
-  .nav-btn { flex:1; padding:9px 2px 8px; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-light); font-size:10px; font-weight:600; }
-  .nav-btn .nav-icon { font-size:21px; transition:transform 0.2s; }
-  .nav-btn.active { color:var(--primary); }
-  .nav-btn.active .nav-icon { transform:translateY(-1px) scale(1.08); }
+  .main { flex:1; margin-left:250px; min-height:100vh; padding:0 0 40px; }
+  .topbar { background:var(--bg2); border-bottom:1px solid var(--border); padding:16px 28px; position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .topbar h2 { font-size:20px; font-weight:700; }
+  .topbar .sub { font-size:12px; color:var(--text-dim); margin-top:2px; }
+  .page { padding:24px 28px; }
 
-  .hero { background:linear-gradient(135deg, #ff5722 0%, #ff9800 100%); color:white; padding:34px 22px 30px; text-align:center; border-radius:0 0 26px 26px; position:relative; overflow:hidden; }
-  .hero::before { content:''; position:absolute; top:-50px; right:-50px; width:180px; height:180px; background:rgba(255,255,255,0.08); border-radius:50%; }
-  .hero h2 { font-size:26px; font-weight:800; margin-bottom:10px; line-height:1.15; letter-spacing:-0.8px; }
-  .hero p { font-size:14px; opacity:0.95; line-height:1.5; max-width:340px; margin:0 auto; }
-  .hero .stats { display:flex; justify-content:space-around; margin-top:22px; gap:8px; }
-  .hero .stat { flex:1; }
-  .hero .stat .num { font-size:20px; font-weight:800; }
-  .hero .stat .label { font-size:11px; opacity:0.9; margin-top:2px; }
-
-  .section-head { padding:22px 18px 12px; font-size:18px; font-weight:800; letter-spacing:-0.4px; }
-  .section-head.center { text-align:center; }
-
-  .features-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px; padding:0 16px; }
-  .feature-card { background:var(--card); padding:15px; border-radius:var(--radius); box-shadow:var(--shadow); }
-  .feature-card .ico { font-size:26px; margin-bottom:8px; }
-  .feature-card h4 { font-size:13px; font-weight:800; margin-bottom:3px; }
-  .feature-card p { font-size:11px; color:var(--text-light); line-height:1.4; }
-
-  .about-box { background:white; margin:18px 16px; padding:20px; border-radius:var(--radius); box-shadow:var(--shadow); }
-  .about-box h3 { color:var(--primary); font-size:17px; margin-bottom:12px; }
-  .about-box p { font-size:13px; color:var(--text-light); line-height:1.7; margin-bottom:10px; }
-  .about-box p:last-child { margin-bottom:0; }
-
-  .role-chooser { padding:0 16px 26px; }
-  .role-btn { width:100%; padding:20px 18px; background:white; border:2px solid var(--border); border-radius:18px; display:flex; align-items:center; gap:16px; margin-bottom:13px; text-align:left; transition:all 0.2s; box-shadow:var(--shadow); }
-  .role-btn:active { transform:scale(0.98); }
-  .role-btn:hover { border-color:var(--primary); }
-  .role-btn .role-icon { font-size:34px; width:60px; height:60px; background:var(--primary-light); border-radius:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .role-btn .role-text h4 { font-size:16px; font-weight:800; margin-bottom:3px; }
-  .role-btn .role-text p { font-size:12px; color:var(--text-light); }
-  .role-btn .arrow { margin-left:auto; color:var(--text-light); font-size:20px; }
-
-  .form-page { padding:22px 18px; }
-  .form-page h2 { font-size:22px; font-weight:800; letter-spacing:-0.5px; margin-bottom:6px; }
-  .form-page .sub { font-size:13px; color:var(--text-light); margin-bottom:22px; }
-  .field { margin-bottom:15px; }
-  .field label { display:block; font-size:12px; font-weight:700; margin-bottom:6px; color:var(--text); text-transform:uppercase; letter-spacing:0.3px; }
-  .field input,.field textarea,.field select { width:100%; padding:13px 14px; border:1.5px solid var(--border); border-radius:11px; font-size:14px; background:white; color:var(--text); transition:border 0.15s; }
-  .field input:focus,.field textarea:focus,.field select:focus { outline:none; border-color:var(--primary); }
-  .field textarea { resize:vertical; min-height:82px; }
-  .field small { font-size:11px; color:var(--text-light); display:block; margin-top:4px; }
-
-  .btn { width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-size:15px; font-weight:700; transition:background 0.15s, transform 0.05s; display:inline-flex; align-items:center; justify-content:center; gap:7px; }
-  .btn:active { transform:scale(0.98); }
-  .btn:hover { background:var(--primary-dark); }
-  .btn:disabled { opacity:0.5; cursor:not-allowed; }
-  .btn.secondary { background:white; color:var(--primary); border:2px solid var(--primary); }
-  .btn.ghost { background:transparent; color:var(--text-light); border:1.5px solid var(--border); }
-  .btn.danger { background:var(--danger); }
-  .btn.success { background:var(--success); }
-  .btn.small { padding:8px 14px; font-size:13px; width:auto; }
-  .btn.full { width:100%; }
-
-  .switch-link { text-align:center; margin-top:18px; font-size:14px; color:var(--text-light); }
-  .switch-link a { color:var(--primary); font-weight:700; cursor:pointer; text-decoration:none; }
-
-  .content { padding:16px; }
-
-  .card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:14px; overflow:hidden; }
-  .card img { width:100%; max-height:240px; object-fit:cover; }
-  .card .body { padding:14px; }
-  .card h4 { font-size:15px; font-weight:700; margin-bottom:4px; }
-  .card .price { color:var(--primary); font-weight:800; font-size:16px; }
-  .card .desc { font-size:13px; color:var(--text-light); margin-top:6px; line-height:1.45; }
-  .card .meta { font-size:12px; color:var(--text-light); margin-top:8px; display:flex; gap:12px; flex-wrap:wrap; }
-  .card .actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
-
-  .empty { text-align:center; padding:52px 24px; color:var(--text-light); }
-  .empty .ico { font-size:52px; opacity:0.35; margin-bottom:12px; }
-  .empty p { font-size:14px; line-height:1.5; }
-
-  .section-title { font-size:15px; font-weight:800; color:var(--text); margin:20px 4px 12px; display:flex; justify-content:space-between; align-items:center; }
-
-  .badge { display:inline-block; padding:3px 9px; border-radius:6px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; }
-  .badge.pending { background:#fef3c7; color:#92400e; }
-  .badge.preparing { background:#dbeafe; color:#1e40af; }
-  .badge.delivering { background:#e0e7ff; color:#3730a3; }
-  .badge.delivered { background:#d1fae5; color:#065f46; }
-  .badge.cancelled { background:#fee2e2; color:#991b1b; }
-  .badge.live { background:#ef4444; color:white; display:inline-flex; align-items:center; gap:5px; }
-  .badge.approved { background:#d1fae5; color:#065f46; }
-  .badge.flagged { background:#fef3c7; color:#92400e; }
-
-  .live-dot { width:6px; height:6px; border-radius:50%; background:white; animation:pulse 1.2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-
-  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:18px; }
-  .stat-card { background:white; border-radius:var(--radius); padding:15px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:16px; margin-bottom:24px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; position:relative; overflow:hidden; }
   .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--primary); }
-  .stat-card.info::before { background:var(--info); }
   .stat-card.success::before { background:var(--success); }
   .stat-card.warn::before { background:var(--warn); }
-  .stat-card .num { font-size:22px; font-weight:800; letter-spacing:-0.6px; }
-  .stat-card .label { font-size:11px; color:var(--text-light); margin-top:3px; font-weight:600; }
+  .stat-card.info::before { background:var(--info); }
+  .stat-card.accent::before { background:var(--accent); }
+  .stat-card .label { font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; font-weight:600; }
+  .stat-card .num { font-size:28px; font-weight:800; margin:8px 0 4px; letter-spacing:-1px; }
+  .stat-card .trend { font-size:12px; color:var(--text-dim); }
 
-  .profile-head { text-align:center; padding:24px 16px 18px; background:white; margin-bottom:16px; border-radius:var(--radius); box-shadow:var(--shadow); }
-  .avatar { width:88px; height:88px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:34px; font-weight:800; margin:0 auto 12px; overflow:hidden; border:4px solid white; box-shadow:var(--shadow-lg); }
-  .avatar img { width:100%; height:100%; object-fit:cover; }
-  .profile-head h3 { font-size:18px; margin-bottom:4px; }
-  .profile-head p { font-size:13px; color:var(--text-light); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+  .card-pad { padding:18px; }
+  .card-head { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .card-head h4 { font-size:15px; }
+  .card-head .sub { font-size:12px; color:var(--text-dim); margin-top:2px; }
 
-  .menu-list { background:white; border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; margin-bottom:14px; }
-  .menu-item { display:flex; align-items:center; gap:14px; padding:15px 16px; border-bottom:1px solid var(--border); }
-  .menu-item:last-child { border-bottom:none; }
-  .menu-item:active { background:var(--bg); }
-  .menu-item .icon { font-size:21px; width:26px; text-align:center; }
-  .menu-item .label { flex:1; font-size:14px; font-weight:600; }
-  .menu-item .sub { font-size:11px; color:var(--text-light); margin-top:2px; font-weight:400; }
-  .menu-item .arrow { color:var(--text-light); font-size:18px; }
+  .btn { padding:9px 16px; border-radius:9px; border:none; background:var(--primary); color:white; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; transition:all 0.15s; }
+  .btn:hover { background:var(--primary-dark); }
+  .btn.small { padding:6px 11px; font-size:12px; }
+  .btn.ghost { background:transparent; border:1px solid var(--border); color:var(--text); }
+  .btn.ghost:hover { background:var(--card2); }
+  .btn.success { background:var(--success); }
+  .btn.danger { background:var(--danger); }
+  .btn.warn { background:var(--warn); color:#1a1a1a; }
+  .btn.info { background:var(--info); }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
 
-  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:flex-end; justify-content:center; z-index:500; }
+  .tbl-wrap { overflow-x:auto; }
+  table.tbl { width:100%; border-collapse:collapse; font-size:13px; }
+  table.tbl th, table.tbl td { padding:11px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  table.tbl th { background:var(--bg2); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim); }
+  table.tbl tr:hover td { background:var(--card2); }
+  table.tbl td.actions { white-space:nowrap; }
+
+  .badge { display:inline-block; padding:3px 9px; border-radius:6px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; }
+  .badge.pending { background:rgba(245,158,11,0.15); color:var(--warn); }
+  .badge.approved,.badge.delivered,.badge.active { background:rgba(34,197,94,0.15); color:var(--success); }
+  .badge.rejected,.badge.cancelled,.badge.banned,.badge.blocked { background:rgba(239,68,68,0.15); color:var(--danger); }
+  .badge.preparing { background:rgba(59,130,246,0.15); color:var(--info); }
+  .badge.delivering { background:rgba(139,92,246,0.15); color:var(--accent); }
+  .badge.warned { background:rgba(245,158,11,0.15); color:var(--warn); }
+  .badge.live { background:var(--danger); color:white; display:inline-flex; align-items:center; gap:5px; }
+  .live-dot { width:6px; height:6px; border-radius:50%; background:white; animation:pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:500; padding:20px; backdrop-filter:blur(4px); }
   .modal-bg.open { display:flex; }
-  .modal { background:white; width:100%; max-width:500px; border-radius:22px 22px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom, 0)); max-height:90vh; overflow-y:auto; animation:slideUp 0.25s cubic-bezier(0.2, 0.9, 0.3, 1); }
-  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-  .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-  .modal-head h3 { font-size:17px; font-weight:800; }
-  .modal-close { background:var(--bg); border:none; color:var(--text-light); width:34px; height:34px; border-radius:50%; font-size:20px; display:flex; align-items:center; justify-content:center; line-height:1; }
+  .modal { background:var(--card); border-radius:16px; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; border:1px solid var(--border); animation:modalIn 0.2s ease; }
+  @keyframes modalIn { from{transform:scale(0.95); opacity:0} to{transform:scale(1); opacity:1} }
+  .modal-head { padding:18px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .modal-head h3 { font-size:17px; }
+  .modal-close { background:none; border:none; color:var(--text-dim); font-size:24px; cursor:pointer; line-height:1; }
+  .modal-body { padding:20px; }
+  .modal-foot { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; }
 
-  .toast { position:fixed; bottom:100px; left:50%; transform:translate(-50%, 100px); background:#1a1a1a; color:white; padding:12px 20px; border-radius:11px; font-size:14px; font-weight:600; z-index:9999; opacity:0; transition:all 0.3s; pointer-events:none; max-width:90vw; text-align:center; box-shadow:var(--shadow-lg); }
-  .toast.show { transform:translate(-50%, 0); opacity:1; }
-  .toast.success { background:var(--success); }
-  .toast.danger { background:var(--danger); }
-  .toast.warn { background:var(--warn); color:#1a1a1a; }
+  .form-group { margin-bottom:14px; }
+  .form-group label { display:block; font-size:12px; font-weight:700; margin-bottom:6px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.4px; }
+  .form-group input,.form-group textarea,.form-group select { width:100%; padding:10px 12px; background:var(--bg2); border:1px solid var(--border); border-radius:9px; color:var(--text); font-size:13px; font-family:inherit; }
+  .form-group input:focus,.form-group textarea:focus,.form-group select:focus { outline:none; border-color:var(--primary); }
+  .form-group textarea { resize:vertical; min-height:80px; }
 
-  .video-box { width:100%; max-height:320px; background:#000; border-radius:10px; display:block; }
-  .stream-box { background:#111; color:white; border-radius:var(--radius); overflow:hidden; aspect-ratio:16 / 9; display:flex; align-items:center; justify-content:center; position:relative; margin-bottom:14px; }
-  .stream-box .live-tag { position:absolute; top:12px; left:12px; z-index:2; }
-  .stream-box .placeholder { text-align:center; padding:20px; }
-  .stream-box .placeholder .ico { font-size:42px; margin-bottom:8px; opacity:0.7; }
+  .login-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+  .login-card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:34px; width:100%; max-width:400px; box-shadow:var(--shadow); }
+  .login-card .brand-big { display:flex; align-items:center; gap:12px; margin-bottom:26px; }
+  .login-card .brand-big .logo { width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg, var(--primary), #ff9800); display:flex; align-items:center; justify-content:center; font-size:24px; }
+  .login-card .brand-big h2 { font-size:19px; }
+  .login-card .brand-big small { font-size:11px; color:var(--text-dim); }
+  .login-card h3 { margin-bottom:6px; }
+  .login-card p.hint { color:var(--text-dim); font-size:13px; margin-bottom:22px; }
 
-  .progress-labels { display:flex; justify-content:space-between; font-size:10px; color:var(--text-light); margin-bottom:6px; font-weight:600; }
-  .progress-track { height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
-  .progress-fill { height:100%; background:var(--primary); transition:width 0.4s; border-radius:4px; }
-
-  .tabs { display:flex; gap:6px; padding:0 4px 12px; overflow-x:auto; scrollbar-width:none; }
-  .tabs::-webkit-scrollbar { display:none; }
-  .tab { padding:8px 14px; border-radius:20px; background:white; border:1.5px solid var(--border); font-size:13px; font-weight:700; white-space:nowrap; color:var(--text-light); flex-shrink:0; }
-  .tab.active { background:var(--primary); color:white; border-color:var(--primary); }
-
-  .banner { padding:12px 16px; border-radius:10px; font-size:13px; margin-bottom:14px; display:flex; gap:10px; align-items:flex-start; }
-  .banner.warn { background:#fef3c7; color:#92400e; }
-  .banner.danger { background:#fee2e2; color:#991b1b; }
-
-  .pending-box { background:white; border-radius:var(--radius); padding:26px 20px; text-align:center; box-shadow:var(--shadow); }
-  .pending-box .big-ico { font-size:64px; margin-bottom:12px; }
-  .pending-box h3 { font-size:19px; margin-bottom:10px; }
-  .pending-box p { font-size:14px; color:var(--text-light); line-height:1.6; margin-bottom:16px; }
-  .pending-info { text-align:left; background:var(--bg); padding:14px; border-radius:10px; font-size:13px; line-height:1.9; }
-
-  .distance-pill { display:inline-flex; align-items:center; gap:4px; background:var(--primary-light); color:var(--primary); padding:3px 9px; border-radius:8px; font-size:11px; font-weight:700; }
-
-  .referral-code { font-size:26px; font-weight:800; letter-spacing:3px; background:var(--primary-light); color:var(--primary); padding:14px; border-radius:12px; margin:14px 0; text-align:center; }
-  .referral-track { height:8px; background:var(--border); border-radius:4px; overflow:hidden; margin-top:8px; }
-  .referral-fill { height:100%; background:var(--primary); transition:width 0.4s; border-radius:4px; }
-
-  .row { display:flex; gap:10px; }
-  .row > * { flex:1; }
-  .muted { color:var(--text-light); }
-  .text-sm { font-size:12px; }
-  .mt-1 { margin-top:8px; }
-  .mt-2 { margin-top:16px; }
-  .mb-2 { margin-bottom:16px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; }
+  .row > * { flex:1; min-width:140px; }
   .divider { height:1px; background:var(--border); margin:16px 0; }
-  .hidden { display:none !important; }
-  .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
+  .empty { text-align:center; padding:48px 20px; color:var(--text-dim); }
+  .empty .ico { font-size:42px; opacity:0.35; margin-bottom:10px; }
+  .muted { color:var(--text-dim); }
+  .text-sm { font-size:12px; }
+  .text-danger { color:var(--danger); }
+  .mt-1 { margin-top:8px; } .mt-2 { margin-top:16px; } .mb-2 { margin-bottom:16px; }
+
+  .bar-chart { display:flex; align-items:flex-end; gap:8px; height:180px; padding:10px 0; }
+  .bar-chart .bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end; }
+  .bar-chart .bar { width:100%; background:linear-gradient(180deg, var(--primary), var(--primary-dark)); border-radius:6px 6px 0 0; min-height:3px; }
+  .bar-chart .bar-lbl { font-size:10px; color:var(--text-dim); }
+  .bar-chart .bar-val { font-size:11px; font-weight:700; }
+
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:13px 20px; border-radius:11px; z-index:9999; font-size:14px; box-shadow:var(--shadow); transform:translateY(100px); opacity:0; transition:all 0.3s; max-width:90vw; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.success { border-left:3px solid var(--success); }
+  .toast.danger { border-left:3px solid var(--danger); }
+  .toast.warn { border-left:3px solid var(--warn); }
+
+  .msg { padding:14px 18px; border-bottom:1px solid var(--border); cursor:pointer; }
+  .msg:hover { background:var(--card2); }
+  .msg.unread { background:rgba(59,130,246,0.06); border-left:3px solid var(--info); }
+  .msg.abusive { background:rgba(239,68,68,0.06); border-left:3px solid var(--danger); }
+  .msg .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; gap:10px; }
+  .msg .from { font-weight:700; font-size:13px; }
+  .msg .time { font-size:11px; color:var(--text-dim); }
+  .msg .body { font-size:13px; color:var(--text-dim); line-height:1.5; }
+
+  .reel-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:16px; }
+  .reel-card { background:var(--card); border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+  .reel-card video, .reel-card img { width:100%; height:160px; object-fit:cover; background:#000; display:block; }
+  .reel-card .body { padding:12px; }
+  .reel-card h5 { font-size:13px; margin-bottom:6px; }
+  .reel-card .meta { font-size:11px; color:var(--text-dim); margin-bottom:10px; }
+  .reel-card .acts { display:flex; gap:6px; flex-wrap:wrap; }
+
+  @media (max-width:900px) {
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.open { transform:translateX(0); }
+    .main { margin-left:0; }
+    .page { padding:16px; }
+    .topbar { padding:12px 16px; }
+  }
 </style>
 </head>
 <body>
-<div id="root"></div>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="brand-big">
+      <div class="logo">👑</div>
+      <div><h2>FoodFast Admin</h2><small>Control Center</small></div>
+    </div>
+    <h3>Sign In</h3>
+    <p class="hint">Restricted area — company administrators only.</p>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group"><label>Username</label><input required name="u" placeholder="Enter username"></div>
+      <div class="form-group"><label>Password</label><input required type="password" name="p" placeholder="Enter password"></div>
+      <button class="btn" type="submit" style="width:100%;padding:12px;">Sign In →</button>
+    </form>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="logo">👑</div>
+    <div><h1>FoodFast</h1><small>ADMIN CONTROL</small></div>
+  </div>
+  <nav id="nav"></nav>
+  <div class="footer">
+    <div class="admin-name">👤 joames</div>
+    <div>Super Admin</div>
+    <button class="btn ghost small mt-1" style="width:100%;" onclick="logout()">Sign Out</button>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h2 id="pageTitle">Dashboard</h2>
+      <div class="sub" id="pageSub">Overview of your platform</div>
+    </div>
+    <div>
+      <button class="btn ghost small" onclick="loadAndRender()">🔄 Refresh</button>
+    </div>
+  </div>
+  <div class="page" id="pageContent"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 /* ============================================================
-   FoodFast — Buyer + Seller App
+   FoodFast Admin — Backend Connected
    ============================================================ */
 
 const API_BASE = '/api';
 
 const API = {
-  token: localStorage.getItem('ff_token') || null,
+  token: localStorage.getItem('ff_admin_token') || null,
   setToken(t) {
     this.token = t;
-    if (t) localStorage.setItem('ff_token', t);
-    else localStorage.removeItem('ff_token');
+    if (t) localStorage.setItem('ff_admin_token', t);
+    else localStorage.removeItem('ff_admin_token');
   },
   async req(path, options = {}) {
-    const headers = { ...(options.headers || {}) };
-    if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
+    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     if (this.token) headers.Authorization = `Bearer ${this.token}`;
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
     if (!res.ok) {
@@ -234,13 +229,21 @@ const API = {
     return res.json();
   },
   get:  (p)    => API.req(p),
-  post: (p, b) => API.req(p, { method:'POST', body: b instanceof FormData ? b : JSON.stringify(b) }),
-  patch:(p, b) => API.req(p, { method:'PATCH', body: JSON.stringify(b) }),
+  post: (p, b) => API.req(p, { method:'POST', body: JSON.stringify(b || {}) }),
+  patch:(p, b) => API.req(p, { method:'PATCH', body: JSON.stringify(b || {}) }),
   del:  (p)    => API.req(p, { method:'DELETE' })
 };
 
 const $ = (s, el=document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = (ts) => new Date(ts).toLocaleString();
+const fmtTime = (ts) => {
+  const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+};
 
 function toast(msg, type='') {
   const t = $('#toast');
@@ -249,1257 +252,720 @@ function toast(msg, type='') {
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
-function distanceKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2-lat1) * Math.PI / 180;
-  const dLng = (lng2-lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-/* State */
-const state = {
-  view: 'loading',
-  authRole: 'buyer',
-  authMode: 'login',
-  sellerTab: 'home',
-  buyerTab: 'home',
-  orderFilter: 'all',
-  me: null,
-  socket: null,
-  cache: { posts:[], orders:[], reels:[], streams:[] },
-  postImageUrl: null,
-  reelVideoUrl: null,
-  agora: { client:null, track:null, audioTrack:null }
+const D = {
+  stats: {}, sellers: [], pending: [], users: [], posts: [], reels: [],
+  streams: [], orders: [], messages: [], warnings: [], blocked: [], socket: null
 };
 
-function go(view, patch = {}) {
-  state.view = view;
-  Object.assign(state, patch);
-  window.scrollTo(0, 0);
-  render();
-}
-
-/* ============================================================
-   BOOT
-   ============================================================ */
-(async function boot() {
-  if (API.token) {
-    try {
-      const me = await API.get('/auth/me');
-      state.me = me;
-      state.view = me.role === 'seller' ? 'sellerApp' : 'buyerApp';
-      await loadAll();
-      connectSocket();
-    } catch (e) {
-      API.setToken(null);
-      state.view = 'landing';
-    }
-  } else {
-    state.view = 'landing';
-  }
-  render();
-})();
-
-/* ============================================================
-   SOCKET
-   ============================================================ */
-function connectSocket() {
-  if (!state.me || state.socket) return;
-  state.socket = io(window.location.origin);
-  state.socket.emit('join', { userId: state.me._id, role: state.me.role });
-
-  state.socket.on('order:new', async () => {
-    if (state.me.role === 'seller') {
-      toast('🔔 New order received!', 'success');
-      await loadAll();
-      render();
-    }
-  });
-  state.socket.on('order:updated', async () => { await loadAll(); render(); });
-  state.socket.on('user:warned', ({ reason }) => toast('⚠️ Admin warning: ' + reason, 'warn'));
-  state.socket.on('user:blocked', () => { toast('🚫 Account blocked', 'danger'); setTimeout(() => location.reload(), 2000); });
-  state.socket.on('account:approved', () => { toast('🎉 Account approved!', 'success'); setTimeout(() => location.reload(), 1500); });
-  state.socket.on('message:new', () => toast('💬 New message from admin', 'success'));
-  state.socket.on('stream:started', async () => { await loadAll(); render(); });
-  state.socket.on('stream:ended', async () => { await loadAll(); render(); });
-}
-
-/* ============================================================
-   DATA
-   ============================================================ */
-async function loadAll() {
-  try {
-    const [posts, reels, streams] = await Promise.all([
-      API.get('/posts').catch(() => []),
-      API.get('/reels').catch(() => []),
-      API.get('/agora/live').catch(() => [])
-    ]);
-    state.cache.posts = posts;
-    state.cache.reels = reels;
-    state.cache.streams = streams;
-    if (state.me) {
-      state.cache.orders = await API.get('/orders/my').catch(() => []);
-      // Refresh own user (for latest warnings/avatar/etc)
-      try { state.me = await API.get('/auth/me'); } catch(e){}
-    }
-  } catch (err) { console.error(err); }
-}
-
-/* ============================================================
-   RENDER
-   ============================================================ */
-function render() {
-  const root = $('#root');
-  switch (state.view) {
-    case 'loading': root.innerHTML = `<div class="app no-nav" style="display:flex;align-items:center;justify-content:center;padding-top:80px;font-size:64px;">🍔</div>`; break;
-    case 'landing': root.innerHTML = renderLanding(); break;
-    case 'auth': root.innerHTML = renderAuth(); break;
-    case 'sellerApp': root.innerHTML = renderSellerApp(); break;
-    case 'buyerApp': root.innerHTML = renderBuyerApp(); break;
-    default: root.innerHTML = renderLanding();
-  }
-}
-
-/* ============================================================
-   LANDING
-   ============================================================ */
-function renderLanding() {
-  return `
-  <div class="app no-nav">
-    <div class="header">
-      <div class="logo"><span class="logo-icon">🍔</span><h1>FoodFast</h1></div>
-    </div>
-    <div class="hero">
-      <h2>Order & Sell Food — Fast</h2>
-      <p>Fresh meals delivered hot. Live cooking streams. Real-time order tracking.</p>
-      <div class="stats">
-        <div class="stat"><div class="num">12K+</div><div class="label">Orders</div></div>
-        <div class="stat"><div class="num">850+</div><div class="label">Sellers</div></div>
-        <div class="stat"><div class="num">4.9★</div><div class="label">Rating</div></div>
-      </div>
-    </div>
-
-    <div class="section-head center">Why FoodFast?</div>
-    <div class="features-grid">
-      <div class="feature-card"><div class="ico">⚡</div><h4>Lightning Fast</h4><p>Order in seconds, delivered in minutes.</p></div>
-      <div class="feature-card"><div class="ico">📺</div><h4>Live Cooking</h4><p>Watch your meal prepared live.</p></div>
-      <div class="feature-card"><div class="ico">🎬</div><h4>Food Reels</h4><p>Discover trending dishes instantly.</p></div>
-      <div class="feature-card"><div class="ico">📍</div><h4>Nearby Sellers</h4><p>See distance to every kitchen.</p></div>
-      <div class="feature-card"><div class="ico">🎁</div><h4>Refer & Earn</h4><p>Invite 10 friends, get discounts.</p></div>
-      <div class="feature-card"><div class="ico">📊</div><h4>Seller Insights</h4><p>Track daily customers & sales.</p></div>
-    </div>
-
-    <div class="about-box">
-      <h3>🍽️ About Our Food</h3>
-      <p>Every meal on FoodFast is prepared by verified home chefs and professional kitchens using fresh, locally-sourced ingredients. Our sellers go through a strict approval process so you can trust what you eat.</p>
-      <p>From sizzling street food to gourmet home cooking — taste the real flavor, straight from the kitchen to your door.</p>
-    </div>
-
-    <div class="section-head center">Continue As</div>
-    <div class="role-chooser">
-      <button class="role-btn" onclick="go('auth', {authRole:'seller', authMode:'login'})">
-        <div class="role-icon">👨‍🍳</div>
-        <div class="role-text"><h4>Seller</h4><p>Post food, stream live, grow your business</p></div>
-        <span class="arrow">›</span>
-      </button>
-      <button class="role-btn" onclick="go('auth', {authRole:'buyer', authMode:'login'})">
-        <div class="role-icon">🛒</div>
-        <div class="role-text"><h4>Buyer</h4><p>Order food, watch live cooking, track delivery</p></div>
-        <span class="arrow">›</span>
-      </button>
-    </div>
-  </div>`;
-}
-
-/* ============================================================
-   AUTH
-   ============================================================ */
-function renderAuth() {
-  const isSeller = state.authRole === 'seller';
-  const isSignup = state.authMode === 'signup';
-  return `
-  <div class="app no-nav">
-    <div class="header">
-      <button class="back-btn" onclick="go('landing')">←</button>
-      <h1>${isSeller ? '👨‍🍳 Seller' : '🛒 Buyer'}</h1>
-      <span style="width:34px;"></span>
-    </div>
-    <div class="form-page">
-      <h2>${isSignup ? 'Create Account' : 'Welcome Back'}</h2>
-      <p class="sub">${isSignup ? `Sign up as a ${isSeller ? 'seller' : 'buyer'}` : `Log in to your ${isSeller ? 'seller' : 'buyer'} account`}</p>
-
-      <form id="authForm" onsubmit="handleAuth(event)">
-        ${isSignup ? `
-          <div class="field"><label>Full Name</label><input required name="name" placeholder="e.g. Joames Londu"></div>
-          <div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@example.com"></div>
-          <div class="field"><label>Phone</label><input required name="phone" placeholder="+255 7XX XXX XXX"></div>
-          <div class="field"><label>Address</label><input required name="address" placeholder="Street, City"></div>
-          ${isSeller ? `
-            <div class="field"><label>Business Name</label><input required name="businessName" placeholder="e.g. Mama's Kitchen"></div>
-            <div class="field"><label>Business Type</label>
-              <select name="businessType">
-                <option>Home Kitchen</option><option>Restaurant</option><option>Food Truck</option><option>Bakery</option><option>Catering</option>
-              </select>
-            </div>
-            <div class="field"><label>Short Bio</label><textarea name="bio" placeholder="Tell buyers about your food..."></textarea></div>
-          ` : ''}
-          <div class="field"><label>Password</label><input required type="password" name="password" minlength="4" placeholder="At least 4 characters"></div>
-          <div class="field">
-            <label>Your Location</label>
-            <button type="button" class="btn secondary small full" onclick="detectLocation()">📍 Use My Current Location</button>
-            <input type="hidden" name="lat" id="latField">
-            <input type="hidden" name="lng" id="lngField">
-            <small id="locStatus">Optional — buyers use this to see distance.</small>
-          </div>
-          <div class="field"><label>Referral Code (optional)</label><input name="referral" placeholder="Enter a friend's code"></div>
-        ` : `
-          <div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@example.com"></div>
-          <div class="field"><label>Password</label><input required type="password" name="password" placeholder="Your password"></div>
-        `}
-        <button type="submit" class="btn full" id="authSubmitBtn">${isSignup ? 'Create Account' : 'Log In'}</button>
-      </form>
-
-      <div class="switch-link">
-        ${isSignup ? 'Already have an account?' : "Don't have an account?"}
-        <a onclick="go('auth', {authRole:'${state.authRole}', authMode:'${isSignup ? 'login' : 'signup'}'})">
-          ${isSignup ? 'Log in' : 'Sign up'}
-        </a>
-      </div>
-    </div>
-  </div>`;
-}
-
-function detectLocation() {
-  if (!navigator.geolocation) { toast('Geolocation not supported', 'warn'); return; }
-  toast('Detecting location...');
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      $('#latField').value = pos.coords.latitude.toFixed(6);
-      $('#lngField').value = pos.coords.longitude.toFixed(6);
-      $('#locStatus').textContent = `✓ Location set (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
-      toast('Location captured ✓', 'success');
-    },
-    err => toast('Could not get location: ' + err.message, 'danger'),
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-}
-
-async function handleAuth(e) {
+/* ---------- Login ---------- */
+async function handleLogin(e) {
   e.preventDefault();
-  const btn = $('#authSubmitBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Please wait...';
   const fd = new FormData(e.target);
-  const isSignup = state.authMode === 'signup';
-
   try {
-    let result;
-    if (isSignup) {
-      result = await API.post('/auth/signup', {
-        role: state.authRole,
-        name: fd.get('name').trim(),
-        email: fd.get('email').trim().toLowerCase(),
-        phone: fd.get('phone').trim(),
-        address: fd.get('address').trim(),
-        password: fd.get('password'),
-        lat: parseFloat(fd.get('lat')) || null,
-        lng: parseFloat(fd.get('lng')) || null,
-        businessName: state.authRole === 'seller' ? fd.get('businessName')?.trim() : undefined,
-        businessType: state.authRole === 'seller' ? fd.get('businessType') : undefined,
-        bio: state.authRole === 'seller' ? fd.get('bio')?.trim() : undefined,
-        referral: (fd.get('referral') || '').trim().toUpperCase() || undefined
-      });
-    } else {
-      result = await API.post('/auth/login', {
-        email: fd.get('email').trim().toLowerCase(),
-        password: fd.get('password'),
-        role: state.authRole
-      });
-    }
-
-    API.setToken(result.token);
-    state.me = result.user;
-    await loadAll();
-    connectSocket();
-
-    toast(isSignup ? 'Account created ✓' : 'Welcome back!', 'success');
-    go(state.me.role === 'seller' ? 'sellerApp' : 'buyerApp');
+    const { token } = await API.post('/auth/admin-login', {
+      username: fd.get('u'),
+      password: fd.get('p')
+    });
+    API.setToken(token);
+    $('#loginScreen').style.display = 'none';
+    bootAdmin();
+    toast('Welcome back, Admin 👑', 'success');
   } catch (err) {
-    toast(err.message, 'danger');
-    btn.disabled = false;
-    btn.textContent = isSignup ? 'Create Account' : 'Log In';
+    toast('Invalid credentials', 'danger');
   }
 }
 
 function logout() {
-  if (state.agora.client) { try { state.agora.client.leave(); } catch(e){} }
   API.setToken(null);
-  state.me = null;
-  state.cache = { posts:[], orders:[], reels:[], streams:[] };
-  if (state.socket) { state.socket.disconnect(); state.socket = null; }
-  go('landing');
+  location.reload();
 }
 
-/* ============================================================
-   SELLER APP
-   ============================================================ */
-function renderSellerApp() {
-  const me = state.me;
-  if (!me || me.role !== 'seller') { go('landing'); return ''; }
-  if (!me.approved) return renderSellerPending(me);
+/* ---------- Router ---------- */
+const routes = {
+  dashboard: { title:'Dashboard', sub:'Platform overview & analytics', icon:'📊', render: renderDashboard },
+  sellers:   { title:'Seller Requests', sub:'Approve or decline sellers', icon:'👨‍🍳', render: renderSellers, badge: () => D.pending.length },
+  users:     { title:'All Users', sub:'Manage buyers and sellers', icon:'👥', render: renderUsers },
+  posts:     { title:'Food Posts', sub:'Moderate dishes posted by sellers', icon:'🍽️', render: renderPosts },
+  reels:     { title:'Reels Moderation', sub:'Review & remove non-food content', icon:'🎬', render: renderReels, badge: () => D.reels.filter(r=>r.moderation==='pending').length, badgeType:'warn' },
+  streams:   { title:'Live Streams', sub:'Monitor active cooking streams', icon:'📺', render: renderStreams, badge: () => D.streams.filter(s=>s.active).length, badgeType:'danger' },
+  orders:    { title:'Orders', sub:'Track all orders & delivery status', icon:'📦', render: renderOrders, badge: () => D.orders.filter(o=>['pending','preparing','delivering'].includes(o.status)).length, badgeType:'warn' },
+  messages:  { title:'User Messages', sub:'Comments & reports from users', icon:'💬', render: renderMessages, badge: () => D.messages.filter(m=>!m.read).length, badgeType:'danger' },
+  warnings:  { title:'Warnings', sub:'Moderation actions history', icon:'⚠️', render: renderWarnings },
+  blocked:   { title:'Blocked Users', sub:'Users banned from the platform', icon:'🚫', render: renderBlocked, badge: () => D.blocked.length, badgeType:'danger' }
+};
 
-  const tab = state.sellerTab || 'home';
-  let content = '';
-  if (tab === 'home')    content = sellerHome(me);
-  if (tab === 'post')    content = sellerPost();
-  if (tab === 'live')    content = sellerLive(me);
-  if (tab === 'reels')   content = sellerReels(me);
-  if (tab === 'account') content = sellerAccount(me);
+let currentRoute = 'dashboard';
 
-  const warnBanner = me.warnings > 0 ? `<div class="banner warn">⚠️ <div><b>You have ${me.warnings} warning(s) from admin.</b> Please review your content.</div></div>` : '';
-
-  return `
-  <div class="app">
-    <div class="header">
-      <div class="logo"><span class="logo-icon">👨‍🍳</span><h1>${esc((me.businessName || me.name).slice(0,18))}</h1></div>
-      <button class="hdr-btn" onclick="logout()">Logout</button>
-    </div>
-    <div class="content">
-      ${warnBanner}
-      ${content}
-    </div>
-    ${renderSellerNav(tab)}
-  </div>`;
+function navigate(route) {
+  currentRoute = route;
+  const r = routes[route];
+  $('#pageTitle').textContent = r.title;
+  $('#pageSub').textContent = r.sub;
+  renderNav();
+  $('#pageContent').innerHTML = r.render();
 }
 
-function renderSellerPending(me) {
-  return `
-  <div class="app no-nav">
-    <div class="header">
-      <div class="logo"><span class="logo-icon">⏳</span><h1>Approval Pending</h1></div>
-      <button class="hdr-btn" onclick="logout()">Logout</button>
-    </div>
-    <div class="content">
-      <div class="pending-box">
-        <div class="big-ico">⏳</div>
-        <h3>Your account is under review</h3>
-        <p>Thanks <b>${esc(me.name)}</b>! Our admin is reviewing your business. You'll be able to sell once approved.</p>
-        <div class="pending-info">
-          <b>Business:</b> ${esc(me.businessName || '-')}<br>
-          <b>Type:</b> ${esc(me.businessType || '-')}<br>
-          <b>Email:</b> ${esc(me.email)}<br>
-          <b>Phone:</b> ${esc(me.phone)}<br>
-          <b>Address:</b> ${esc(me.address)}
-        </div>
-        <button class="btn secondary full mt-2" onclick="location.reload()">🔄 Check Approval Status</button>
-      </div>
-    </div>
-  </div>`;
+function renderNav() {
+  $('#nav').innerHTML = Object.entries(routes).map(([key, r]) => {
+    const badgeCount = r.badge ? r.badge() : 0;
+    const show = badgeCount > 0;
+    const badgeClass = r.badgeType || '';
+    return `<div class="nav-item ${key===currentRoute?'active':''}" onclick="navigate('${key}')">
+      <span class="ico">${r.icon}</span>
+      <span>${r.title}</span>
+      ${show ? `<span class="count ${badgeClass}">${badgeCount}</span>` : ''}
+    </div>`;
+  }).join('');
 }
 
-function renderSellerNav(active) {
-  const items = [
-    { id:'home', icon:'🏠', label:'Home' },
-    { id:'post', icon:'➕', label:'Post' },
-    { id:'live', icon:'📺', label:'Live' },
-    { id:'reels', icon:'🎬', label:'Reels' },
-    { id:'account', icon:'👤', label:'Account' }
-  ];
-  return `<div class="bottom-nav">${items.map(i => `
-    <button class="nav-btn ${active===i.id?'active':''}" onclick="state.sellerTab='${i.id}';render()">
-      <span class="nav-icon">${i.icon}</span><span>${i.label}</span>
-    </button>`).join('')}</div>`;
+/* ---------- Data ---------- */
+async function loadAll() {
+  const r = await Promise.allSettled([
+    API.get('/admin/stats'),
+    API.get('/admin/sellers/pending'),
+    API.get('/admin/sellers/all'),
+    API.get('/admin/users'),
+    API.get('/admin/posts'),
+    API.get('/admin/reels'),
+    API.get('/admin/streams'),
+    API.get('/admin/orders'),
+    API.get('/admin/messages'),
+    API.get('/admin/warnings'),
+    API.get('/admin/blocked')
+  ]);
+  D.stats    = r[0].value || {};
+  D.pending  = r[1].value || [];
+  D.sellers  = r[2].value || [];
+  D.users    = r[3].value || [];
+  D.posts    = r[4].value || [];
+  D.reels    = r[5].value || [];
+  D.streams  = r[6].value || [];
+  D.orders   = r[7].value || [];
+  D.messages = r[8].value || [];
+  D.warnings = r[9].value || [];
+  D.blocked  = r[10].value || [];
 }
 
-function sellerHome(me) {
-  const myPosts = state.cache.posts.filter(p => String(p.sellerId?._id || p.sellerId) === String(me._id));
-  const myOrders = state.cache.orders;
-  const todayStart = new Date().setHours(0,0,0,0);
-  const todayCustomers = new Set(myOrders.filter(o => new Date(o.createdAt) >= todayStart).map(o => String(o.buyerId?._id || o.buyerId))).size;
-  const revenue = myOrders.filter(o => o.status === 'delivered').reduce((s,o) => s + o.total, 0);
-  const pending = myOrders.filter(o => o.status === 'pending').length;
+async function loadAndRender() {
+  try {
+    await loadAll();
+    renderNav();
+    navigate(currentRoute);
+    toast('Data refreshed', 'success');
+  } catch (err) { toast('Failed: ' + err.message, 'danger'); }
+}
+
+function connectSocket() {
+  if (D.socket) return;
+  D.socket = io(window.location.origin);
+  D.socket.emit('join', { role: 'admin' });
+  D.socket.on('order:new', () => { toast('📦 New order!', 'success'); loadAndRender(); });
+  D.socket.on('order:updated', () => loadAndRender());
+  D.socket.on('message:new', () => { toast('💬 New message', 'success'); loadAndRender(); });
+  D.socket.on('reel:new', () => { toast('🎬 New reel pending', 'warn'); loadAndRender(); });
+  D.socket.on('stream:started', () => loadAndRender());
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard() {
+  const s = D.stats;
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
+    const next = d.getTime() + 86400000;
+    const dayOrders = D.orders.filter(o => new Date(o.createdAt).getTime() >= d.getTime() && new Date(o.createdAt).getTime() < next);
+    days.push({
+      label: d.toLocaleDateString('en', { weekday: 'short' }),
+      total: dayOrders.reduce((a,o) => a + o.total, 0)
+    });
+  }
+  const maxDay = Math.max(...days.map(d => d.total), 1);
 
   return `
     <div class="stats-grid">
-      <div class="stat-card"><div class="num">${myOrders.length}</div><div class="label">Total Orders</div></div>
-      <div class="stat-card info"><div class="num">${todayCustomers}</div><div class="label">Today's Customers</div></div>
-      <div class="stat-card success"><div class="num">$${revenue.toFixed(0)}</div><div class="label">Revenue (delivered)</div></div>
-      <div class="stat-card warn"><div class="num">${pending}</div><div class="label">Pending Orders</div></div>
+      <div class="stat-card"><div class="label">Total Revenue</div><div class="num">$${(s.revenue || 0).toFixed(2)}</div><div class="trend">From delivered orders</div></div>
+      <div class="stat-card success"><div class="label">Active Sellers</div><div class="num">${D.sellers.filter(u=>u.approved).length}</div><div class="trend">${D.sellers.length} registered</div></div>
+      <div class="stat-card warn"><div class="label">Pending Approval</div><div class="num">${D.pending.length}</div><div class="trend">${D.pending.length ? '⚠ Needs review' : 'All clear ✓'}</div></div>
+      <div class="stat-card info"><div class="label">Buyers</div><div class="num">${D.users.filter(u=>u.role==='buyer').length}</div><div class="trend">Registered customers</div></div>
+      <div class="stat-card accent"><div class="label">Total Orders</div><div class="num">${D.orders.length}</div><div class="trend">${D.orders.filter(o=>['pending','preparing','delivering'].includes(o.status)).length} in progress</div></div>
+      <div class="stat-card"><div class="label">Active Streams</div><div class="num">${D.streams.filter(s=>s.active).length}</div><div class="trend">Live right now</div></div>
     </div>
 
-    <div class="section-title">
-      <span>Your Posts (${myPosts.length})</span>
-      <button class="btn small" onclick="state.sellerTab='post';render()">➕ Add</button>
-    </div>
+    ${(D.pending.length || D.messages.filter(m=>!m.read).length || D.reels.filter(r=>r.moderation==='pending').length) ? `
+    <div class="card">
+      <div class="card-head"><h4>🚨 Action Required</h4></div>
+      <div class="card-pad">
+        ${D.pending.length ? `<div class="row mb-2" style="align-items:center;">
+          <div style="flex:1;min-width:200px;"><b>${D.pending.length}</b> seller(s) awaiting approval</div>
+          <button class="btn small" onclick="navigate('sellers')">Review →</button>
+        </div>` : ''}
+        ${D.messages.filter(m=>!m.read).length ? `<div class="row mb-2" style="align-items:center;">
+          <div style="flex:1;min-width:200px;"><b>${D.messages.filter(m=>!m.read).length}</b> unread message(s)</div>
+          <button class="btn small info" onclick="navigate('messages')">Open →</button>
+        </div>` : ''}
+        ${D.reels.filter(r=>r.moderation==='pending').length ? `<div class="row" style="align-items:center;">
+          <div style="flex:1;min-width:200px;"><b>${D.reels.filter(r=>r.moderation==='pending').length}</b> reel(s) pending</div>
+          <button class="btn small warn" onclick="navigate('reels')">Moderate →</button>
+        </div>` : ''}
+      </div>
+    </div>` : ''}
 
-    ${myPosts.length ? myPosts.map(p => `
-      <div class="card">
-        ${p.image ? `<img src="${p.image}" alt="${esc(p.title)}">` : ''}
-        <div class="body">
-          <h4>${esc(p.title)}</h4>
-          <div class="price">$${p.price.toFixed(2)}</div>
-          <div class="desc">${esc(p.desc)}</div>
-          <div class="actions">
-            <button class="btn small danger" onclick="deletePost('${p._id}')">Delete</button>
-          </div>
+    <div class="card">
+      <div class="card-head"><div><h4>Sales — Last 7 Days</h4></div></div>
+      <div class="card-pad">
+        <div class="bar-chart">
+          ${days.map(d => `
+            <div class="bar-wrap">
+              <div class="bar-val">$${d.total.toFixed(0)}</div>
+              <div class="bar" style="height:${Math.max(3, (d.total/maxDay)*100)}%"></div>
+              <div class="bar-lbl">${d.label}</div>
+            </div>
+          `).join('')}
         </div>
       </div>
-    `).join('') : `<div class="empty"><div class="ico">🍽️</div><p>No posts yet.<br>Tap "+ Add" to publish your first dish.</p></div>`}
-  `;
-}
+    </div>
 
-function sellerPost() {
-  return `
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px;">➕ Post New Order</h2>
-    <p class="muted text-sm" style="margin-bottom:18px;">Add a dish so buyers can order it.</p>
-
-    <form id="postForm" onsubmit="handlePost(event)">
-      <div class="field"><label>Dish Name</label><input required name="title" placeholder="e.g. Grilled Chicken & Rice"></div>
-      <div class="field"><label>Price ($)</label><input required type="number" step="0.01" min="0" name="price" placeholder="12.50"></div>
-      <div class="field"><label>Description</label><textarea required name="desc" placeholder="Describe the dish..."></textarea></div>
-      <div class="field">
-        <label>Picture of the Food</label>
-        <input type="file" accept="image/*" id="postImageInput" onchange="handlePostImage(event)">
-        <small id="imgStatus"></small>
+    <div class="row">
+      <div class="card" style="flex:1;min-width:280px;">
+        <div class="card-head"><h4>🔴 Live Now</h4><button class="btn small ghost" onclick="navigate('streams')">View all</button></div>
+        <div class="card-pad">
+          ${D.streams.filter(s=>s.active).length ? D.streams.filter(s=>s.active).slice(0,4).map(s => {
+            const seller = s.sellerId;
+            return `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+              <div>
+                <div style="font-weight:600;font-size:13px;">${esc(s.title)}</div>
+                <div class="muted text-sm">${esc(seller?.businessName || seller?.name || '-')} • ${fmtTime(s.startedAt)}</div>
+              </div>
+              <span class="badge live"><span class="live-dot"></span>LIVE</span>
+            </div>`;
+          }).join('') : '<div class="empty"><div class="ico">📺</div><p>No active streams</p></div>'}
+        </div>
       </div>
-      <div id="imgPreview"></div>
-      <button type="submit" class="btn full" id="postBtn">Publish Post</button>
-    </form>
+
+      <div class="card" style="flex:1;min-width:280px;">
+        <div class="card-head"><h4>📦 Recent Orders</h4><button class="btn small ghost" onclick="navigate('orders')">View all</button></div>
+        <div class="card-pad">
+          ${D.orders.length ? D.orders.slice(0,5).map(o => {
+            const b = o.buyerId, s = o.sellerId;
+            return `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+              <div>
+                <div style="font-weight:600;font-size:13px;">$${o.total.toFixed(2)} — ${esc(b?.name||'-')}</div>
+                <div class="muted text-sm">from ${esc(s?.businessName||s?.name||'-')} • ${fmtTime(o.createdAt)}</div>
+              </div>
+              <span class="badge ${o.status}">${o.status}</span>
+            </div>`;
+          }).join('') : '<div class="empty"><div class="ico">📦</div><p>No orders yet</p></div>'}
+        </div>
+      </div>
+    </div>
   `;
 }
 
-async function handlePostImage(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    $('#imgPreview').innerHTML = `<img src="${ev.target.result}" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:280px;object-fit:cover;">`;
+/* ---------- Sellers ---------- */
+function renderSellers() {
+  const approved = D.sellers.filter(u => u.approved);
+  return `
+    <div class="stats-grid">
+      <div class="stat-card warn"><div class="label">Pending</div><div class="num">${D.pending.length}</div><div class="trend">Awaiting review</div></div>
+      <div class="stat-card success"><div class="label">Approved</div><div class="num">${approved.length}</div><div class="trend">Active on platform</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h4>⏳ Pending Seller Requests</h4><div class="sub">Review business details</div></div></div>
+      ${D.pending.length ? D.pending.map(s => `
+        <div class="card-pad" style="border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:260px;">
+              <h4 style="font-size:15px;margin-bottom:4px;">${esc(s.businessName || s.name)}</h4>
+              <div class="muted text-sm">${esc(s.businessType || '-')}</div>
+              <div class="divider"></div>
+              <div class="text-sm" style="line-height:1.9;">
+                <div>👤 <b>Owner:</b> ${esc(s.name)}</div>
+                <div>✉️ <b>Email:</b> ${esc(s.email)}</div>
+                <div>📞 <b>Phone:</b> ${esc(s.phone)}</div>
+                <div>📍 <b>Address:</b> ${esc(s.address || '-')}</div>
+                ${s.bio ? `<div>📝 <b>Bio:</b> ${esc(s.bio)}</div>` : ''}
+                <div>📅 <b>Applied:</b> ${fmtDate(s.createdAt)}</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;min-width:160px;">
+              <button class="btn success" onclick="approveSeller('${s._id}')">✅ Approve</button>
+              <button class="btn danger" onclick="openRejectSeller('${s._id}')">❌ Decline</button>
+              <button class="btn ghost" onclick="openContactUser('${s._id}')">✉️ Message</button>
+            </div>
+          </div>
+        </div>
+      `).join('') : '<div class="empty"><div class="ico">✅</div><p>No pending requests</p></div>'}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h4>✅ Approved Sellers (${approved.length})</h4></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <tr><th>Business</th><th>Owner</th><th>Email</th><th>Joined</th><th>Actions</th></tr>
+          ${approved.length ? approved.map(s => `
+            <tr>
+              <td><b>${esc(s.businessName || '-')}</b></td>
+              <td>${esc(s.name)}</td>
+              <td>${esc(s.email)}</td>
+              <td>${new Date(s.createdAt).toLocaleDateString()}</td>
+              <td class="actions">
+                <button class="btn small ghost" onclick="openContactUser('${s._id}')">✉️</button>
+                <button class="btn small warn" onclick="openWarnUser('${s._id}')">⚠️</button>
+                <button class="btn small danger" onclick="openBlockUser('${s._id}')">🚫</button>
+              </td>
+            </tr>
+          `).join('') : '<tr><td colspan="5" class="muted" style="text-align:center;padding:24px;">No approved sellers yet</td></tr>'}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function approveSeller(id) {
+  try { await API.post('/admin/sellers/' + id + '/approve', {}); toast('Approved ✅', 'success'); await loadAndRender(); }
+  catch (err) { toast(err.message, 'danger'); }
+}
+
+function openRejectSeller(id) {
+  const u = D.pending.find(s => s._id === id);
+  showModal(`Decline ${esc(u.businessName || u.name)}`, `
+    <div class="form-group"><label>Reason</label><textarea id="rejectReason">Sorry, your application could not be approved.</textarea></div>
+  `, [
+    { label:'Cancel', class:'ghost', action: closeModal },
+    { label:'❌ Decline', class:'danger', action: async () => {
+      try { await API.post('/admin/sellers/' + id + '/reject', { reason: $('#rejectReason').value }); toast('Declined', 'warn'); closeModal(); await loadAndRender(); }
+      catch (err) { toast(err.message, 'danger'); }
+    }}
+  ]);
+}
+
+/* ---------- Users ---------- */
+function renderUsers() {
+  return `
+    <div class="card">
+      <div class="card-head"><h4>👥 All Users (${D.users.length})</h4></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <tr><th>Name</th><th>Role</th><th>Email</th><th>Phone</th><th>Warnings</th><th>Status</th><th>Actions</th></tr>
+          ${D.users.length ? D.users.map(u => {
+            const isBlocked = D.blocked.some(b => String(b.userId?._id || b.userId) === String(u._id));
+            return `<tr>
+              <td><b>${esc(u.businessName || u.name)}</b><br><span class="muted text-sm">${esc(u.name)}</span></td>
+              <td><span class="badge ${u.role==='seller'?'info':'preparing'}">${u.role}</span></td>
+              <td>${esc(u.email)}</td>
+              <td>${esc(u.phone||'-')}</td>
+              <td>${u.warnings || 0}</td>
+              <td>${isBlocked ? '<span class="badge blocked">Blocked</span>' : (u.role==='seller' && !u.approved) ? '<span class="badge pending">Pending</span>' : '<span class="badge approved">Active</span>'}</td>
+              <td class="actions">
+                <button class="btn small ghost" onclick="openContactUser('${u._id}')">✉️</button>
+                <button class="btn small warn" onclick="openWarnUser('${u._id}')">⚠️</button>
+                ${!isBlocked ? `<button class="btn small danger" onclick="openBlockUser('${u._id}')">🚫</button>` : `<button class="btn small success" onclick="unblockUser('${u._id}')">✅</button>`}
+              </td>
+            </tr>`;
+          }).join('') : '<tr><td colspan="7" class="muted" style="text-align:center;padding:24px;">No users</td></tr>'}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Posts ---------- */
+function renderPosts() {
+  return `
+    <div class="card">
+      <div class="card-head"><h4>🍽️ All Food Posts (${D.posts.length})</h4></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <tr><th>Photo</th><th>Dish</th><th>Seller</th><th>Price</th><th>Posted</th><th>Actions</th></tr>
+          ${D.posts.length ? D.posts.map(p => `
+            <tr>
+              <td>${p.image ? `<img src="${p.image}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;">` : '<div style="width:56px;height:56px;border-radius:8px;background:var(--card2);"></div>'}</td>
+              <td><b>${esc(p.title)}</b><br><span class="muted text-sm">${esc((p.desc||'').slice(0,60))}</span></td>
+              <td>${esc(p.sellerId?.businessName || p.sellerId?.name || '-')}</td>
+              <td>$${p.price.toFixed(2)}</td>
+              <td>${new Date(p.createdAt).toLocaleDateString()}</td>
+              <td class="actions"><button class="btn small danger" onclick="removePost('${p._id}')">🗑️</button></td>
+            </tr>
+          `).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;padding:24px;">No posts</td></tr>'}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function removePost(id) {
+  if (!confirm('Remove this post?')) return;
+  try { await API.del('/admin/posts/' + id); toast('Removed', 'danger'); await loadAndRender(); }
+  catch (err) { toast(err.message, 'danger'); }
+}
+
+/* ---------- Reels ---------- */
+function renderReels() {
+  const filter = window._reelFilter || 'all';
+  let reels = D.reels.slice();
+  if (filter !== 'all') reels = reels.filter(r => (r.moderation || 'pending') === filter);
+
+  const counts = {
+    all: D.reels.length,
+    pending: D.reels.filter(r => r.moderation === 'pending').length,
+    approved: D.reels.filter(r => r.moderation === 'approved').length,
+    flagged: D.reels.filter(r => r.moderation === 'flagged').length,
+    removed: D.reels.filter(r => r.moderation === 'removed').length
   };
-  reader.readAsDataURL(file);
-
-  $('#imgStatus').textContent = '⏳ Uploading...';
-  const fd = new FormData();
-  fd.append('image', file);
-  try {
-    const res = await API.post('/upload/image', fd);
-    state.postImageUrl = res.url;
-    $('#imgStatus').textContent = '✅ Uploaded';
-    toast('Image uploaded ✓', 'success');
-  } catch (err) {
-    state.postImageUrl = null;
-    $('#imgStatus').textContent = '❌ Failed';
-    toast('Upload failed: ' + err.message, 'danger');
-  }
-}
-
-async function handlePost(e) {
-  e.preventDefault();
-  const btn = $('#postBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Publishing...';
-  const fd = new FormData(e.target);
-  try {
-    await API.post('/posts', {
-      title: fd.get('title').trim(),
-      desc: fd.get('desc').trim(),
-      price: parseFloat(fd.get('price')),
-      image: state.postImageUrl
-    });
-    state.postImageUrl = null;
-    toast('Post published ✓', 'success');
-    await loadAll();
-    state.sellerTab = 'home';
-    render();
-  } catch (err) {
-    toast(err.message, 'danger');
-    btn.disabled = false; btn.textContent = 'Publish Post';
-  }
-}
-
-async function deletePost(id) {
-  if (!confirm('Delete this post?')) return;
-  try {
-    await API.del('/posts/' + id);
-    toast('Deleted', 'success');
-    await loadAll();
-    render();
-  } catch (err) { toast(err.message, 'danger'); }
-}
-
-/* ============================================================
-   LIVE STREAMING (Agora)
-   ============================================================ */
-function sellerLive(me) {
-  const myStream = state.cache.streams.find(s => String(s.sellerId?._id || s.sellerId) === String(me._id));
-  const others = state.cache.streams.filter(s => String(s.sellerId?._id || s.sellerId) !== String(me._id));
 
   return `
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px;">📺 Live Streaming</h2>
-    <p class="muted text-sm" style="margin-bottom:18px;">Go live and let buyers watch you cook in real time.</p>
-
-    ${myStream ? `
-      <div class="stream-box" style="aspect-ratio:auto;min-height:260px;">
-        <span class="live-tag badge live"><span class="live-dot"></span>LIVE</span>
-        <div id="agoraLocal" style="width:100%;min-height:260px;background:#000;border-radius:14px;"></div>
+    <div class="card">
+      <div class="card-head">
+        <div class="row" style="flex:1;">
+          ${Object.entries(counts).map(([k,v]) => `<button class="btn small ${filter===k?'':'ghost'}" onclick="setReelFilter('${k}')">${k} (${v})</button>`).join('')}
+        </div>
       </div>
-      <p class="muted text-sm" style="text-align:center;margin-bottom:12px;">You are LIVE: <b>${esc(myStream.title)}</b></p>
-      <button class="btn danger full" onclick="endMyStream('${myStream._id}')">⏹ End Stream</button>
-    ` : `
-      <div class="card"><div class="body">
-        <h4 style="margin-bottom:8px;">Start a Live Stream</h4>
-        <p class="muted text-sm" style="margin-bottom:14px;">Your camera will turn on and buyers will see you live.</p>
-        <form onsubmit="startMyStream(event)">
-          <div class="field"><label>Stream Title</label><input required name="title" placeholder="e.g. Cooking Fresh Pilau Live 🔥"></div>
-          <button type="submit" class="btn full" id="goLiveBtn">🔴 Go Live</button>
-        </form>
-      </div></div>
-    `}
+    </div>
 
-    ${others.length ? `
-      <div class="section-title">Other Sellers Live</div>
-      ${others.map(s => {
-        const seller = s.sellerId;
-        return `<div class="card"><div class="body">
-          <span class="badge live"><span class="live-dot"></span>LIVE</span>
-          <h4 style="margin-top:8px;">${esc(s.title)}</h4>
-          <div class="meta">by ${esc(seller?.businessName || seller?.name || 'Seller')}</div>
-          <button class="btn small secondary mt-1" onclick="watchStream('${s._id}')">👁 Watch</button>
-        </div></div>`;
+    ${reels.length ? `<div class="reel-grid">
+      ${reels.map(r => {
+        const s = r.sellerId;
+        const status = r.moderation || 'pending';
+        const badge = {
+          pending: '<span class="badge pending">Pending</span>',
+          flagged: '<span class="badge" style="background:rgba(239,68,68,0.15);color:var(--danger);">🚩 Flagged</span>',
+          approved: '<span class="badge approved">✅ Approved</span>',
+          removed: '<span class="badge" style="background:rgba(120,120,120,0.2);color:var(--text-dim);">🗑 Removed</span>'
+        }[status];
+        return `<div class="reel-card">
+          ${r.video ? `<video src="${r.video}" controls muted preload="metadata"></video>` : '<div style="height:160px;background:#000;"></div>'}
+          <div class="body">
+            <div class="mb-2">${badge}</div>
+            <h5>${esc(r.title)}</h5>
+            <div class="meta">by ${esc(s?.businessName || s?.name || '-')}</div>
+            <div class="acts">
+              <button class="btn small success" onclick="approveReel('${r._id}')" ${status==='approved'?'disabled':''}>✅</button>
+              <button class="btn small warn" onclick="flagReel('${r._id}')" ${status==='flagged'?'disabled':''}>🚩</button>
+              <button class="btn small danger" onclick="removeReel('${r._id}')" ${status==='removed'?'disabled':''}>🗑</button>
+              <button class="btn small ghost" onclick="openWarnUser('${s?._id}')">⚠️</button>
+            </div>
+          </div>
+        </div>`;
       }).join('')}
-    ` : ''}
+    </div>` : '<div class="card"><div class="empty"><div class="ico">🎬</div><p>No reels</p></div></div>'}
   `;
 }
 
-async function startMyStream(e) {
-  e.preventDefault();
-  const btn = $('#goLiveBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Starting...';
-  const fd = new FormData(e.target);
-  const title = fd.get('title').trim();
-
-  try {
-    // Step 1: Ask our backend to create a stream record (returns streamId + channelName)
-    const created = await API.post('/streams', { title });
-    const channelName = created.channelName;
-    const streamId = created._id;
-
-    // Step 2: Get Agora token from our backend
-    const { token, appId, uid } = await API.post('/agora/token', { channelName, role: 'publisher' });
-
-    // Step 3: Join Agora channel + turn on camera
-    await leaveAgora();
-    const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-    state.agora.client = client;
-    await client.join(appId, channelName, token, uid || null);
-
-    const [videoTrack, audioTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-    state.agora.track = videoTrack;
-    state.agora.audioTrack = audioTrack;
-    await client.publish([videoTrack, audioTrack]);
-
-    toast('You are LIVE 🔴', 'success');
-    await loadAll();
-    state.sellerTab = 'live';
-    render();
-
-    // Play local video after render
-    setTimeout(() => {
-      const container = document.getElementById('agoraLocal');
-      if (container && videoTrack) {
-        container.innerHTML = '';
-        videoTrack.play(container);
-      }
-    }, 100);
-  } catch (err) {
-    toast('Failed to go live: ' + err.message, 'danger');
-    btn.disabled = false; btn.textContent = '🔴 Go Live';
-  }
+function setReelFilter(f) { window._reelFilter = f; navigate('reels'); }
+async function approveReel(id) { try { await API.patch('/admin/reels/' + id, { moderation: 'approved' }); toast('Approved', 'success'); await loadAndRender(); } catch (err) { toast(err.message, 'danger'); } }
+async function flagReel(id) { try { await API.patch('/admin/reels/' + id, { moderation: 'flagged' }); toast('Flagged', 'warn'); await loadAndRender(); } catch (err) { toast(err.message, 'danger'); } }
+async function removeReel(id) {
+  if (!confirm('Remove this reel?')) return;
+  try { await API.del('/admin/reels/' + id); toast('Removed', 'danger'); await loadAndRender(); }
+  catch (err) { toast(err.message, 'danger'); }
 }
 
-async function endMyStream(streamId) {
-  try {
-    await leaveAgora();
-    await API.post('/streams/' + streamId + '/end', {});
-    toast('Stream ended', 'success');
-    await loadAll();
-    render();
-  } catch (err) { toast(err.message, 'danger'); }
-}
-
-async function leaveAgora() {
-  try {
-    if (state.agora.track) { state.agora.track.stop(); state.agora.track.close(); }
-    if (state.agora.audioTrack) { state.agora.audioTrack.stop(); state.agora.audioTrack.close(); }
-    if (state.agora.client) await state.agora.client.leave();
-  } catch (e) {}
-  state.agora = { client:null, track:null, audioTrack:null };
-}
-
-/* ============================================================
-   REELS
-   ============================================================ */
-function sellerReels(me) {
-  const myReels = state.cache.reels.filter(r => String(r.sellerId?._id || r.sellerId) === String(me._id));
+/* ---------- Streams ---------- */
+function renderStreams() {
+  const active = D.streams.filter(s => s.active);
   return `
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px;">🎬 Food Reels</h2>
-    <p class="muted text-sm" style="margin-bottom:18px;">Upload short cooking videos to attract buyers.</p>
-
-    <div class="card"><div class="body">
-      <h4 style="margin-bottom:10px;">Post a Reel</h4>
-      <form onsubmit="handleReel(event)">
-        <div class="field"><label>Reel Title</label><input required name="title" placeholder="e.g. Sizzling Beef Stir-Fry"></div>
-        <div class="field">
-          <label>Video File (max 100MB)</label>
-          <input required type="file" accept="video/*" id="reelVideoInput" onchange="handleReelVideo(event)">
-          <small id="vidStatus"></small>
-        </div>
-        <div id="vidPreview"></div>
-        <button type="submit" class="btn full" id="reelBtn">Upload Reel</button>
-      </form>
-    </div></div>
-
-    <div class="section-title">My Reels (${myReels.length})</div>
-    ${myReels.length ? myReels.map(r => `
-      <div class="card">
-        ${r.video ? `<video class="video-box" src="${r.video}" controls muted playsinline preload="metadata"></video>` : ''}
-        <div class="body">
-          <h4>${esc(r.title)}</h4>
-          <div class="meta">
-            <span>${new Date(r.createdAt).toLocaleString()}</span>
-            ${r.moderation === 'flagged' ? '<span class="badge flagged">🚩 Flagged</span>' : ''}
-            ${r.moderation === 'approved' ? '<span class="badge approved">✅ Approved</span>' : ''}
-            ${r.moderation === 'pending' ? '<span class="badge pending">⏳ Pending</span>' : ''}
+    <div class="card">
+      <div class="card-head"><h4>🔴 Active Streams (${active.length})</h4></div>
+      ${active.length ? active.map(s => {
+        const seller = s.sellerId;
+        return `<div class="card-pad" style="border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center;">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <span class="badge live"><span class="live-dot"></span>LIVE</span>
+                <b>${esc(s.title)}</b>
+              </div>
+              <div class="muted text-sm">${esc(seller?.businessName || seller?.name || '-')} • started ${fmtTime(s.startedAt)}</div>
+            </div>
+            <button class="btn small danger" onclick="forceEndStream('${s._id}')">⏹ Force End</button>
           </div>
-          <div class="actions">
-            <button class="btn small danger" onclick="deleteReel('${r._id}')">Delete</button>
-          </div>
-        </div>
-      </div>
-    `).join('') : `<div class="empty"><div class="ico">🎬</div><p>No reels yet. Upload your first video!</p></div>`}
+        </div>`;
+      }).join('') : '<div class="empty"><div class="ico">📺</div><p>No active streams</p></div>'}
+    </div>
   `;
 }
 
-async function handleReelVideo(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  // Show local preview immediately
-  const url = URL.createObjectURL(file);
-  $('#vidPreview').innerHTML = `<video class="video-box" src="${url}" controls muted playsinline style="margin-bottom:12px;"></video>`;
-
-  $('#vidStatus').textContent = '⏳ Uploading... may take 30-60s for large files';
-  const fd = new FormData();
-  fd.append('video', file);
-  try {
-    const res = await API.post('/upload/video', fd);
-    state.reelVideoUrl = res.url;
-    $('#vidStatus').textContent = '✅ Uploaded — ready to post';
-    toast('Video uploaded ✓', 'success');
-  } catch (err) {
-    state.reelVideoUrl = null;
-    $('#vidStatus').textContent = '❌ Failed: ' + err.message;
-    toast('Upload failed: ' + err.message, 'danger');
-  }
+async function forceEndStream(id) {
+  if (!confirm('Force-end this stream?')) return;
+  try { await API.post('/admin/streams/' + id + '/force-end', {}); toast('Stream ended', 'danger'); await loadAndRender(); }
+  catch (err) { toast(err.message, 'danger'); }
 }
 
-async function handleReel(e) {
-  e.preventDefault();
-  if (!state.reelVideoUrl) { toast('Please wait for the video to finish uploading', 'warn'); return; }
-  const btn = $('#reelBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Posting...';
-  const fd = new FormData(e.target);
-  try {
-    await API.post('/reels', {
-      title: fd.get('title').trim(),
-      video: state.reelVideoUrl
-    });
-    state.reelVideoUrl = null;
-    toast('Reel posted 🎬 — pending admin review', 'success');
-    await loadAll();
-    render();
-  } catch (err) {
-    toast(err.message, 'danger');
-    btn.disabled = false; btn.textContent = 'Upload Reel';
-  }
-}
-
-async function deleteReel(id) {
-  if (!confirm('Delete this reel?')) return;
-  try {
-    await API.del('/reels/' + id);
-    toast('Deleted', 'success');
-    await loadAll();
-    render();
-  } catch (err) { toast(err.message, 'danger'); }
-}
-
-/* ============================================================
-   SELLER ACCOUNT
-   ============================================================ */
-function sellerAccount(me) {
-  const myOrders = state.cache.orders;
-  const todayStart = new Date().setHours(0,0,0,0);
-  const todayCustomers = new Set(myOrders.filter(o => new Date(o.createdAt) >= todayStart).map(o => String(o.buyerId?._id || o.buyerId))).size;
-  const invited = me.invited?.length || 0;
-  const discountActive = invited >= 10;
-
-  return `
-    <div class="profile-head">
-      <div class="avatar">${me.avatar ? `<img src="${me.avatar}">` : esc(me.name.charAt(0).toUpperCase())}</div>
-      <h3>${esc(me.businessName || me.name)}</h3>
-      <p>${esc(me.email)}</p>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card"><div class="num">${myOrders.length}</div><div class="label">Total Orders</div></div>
-      <div class="stat-card info"><div class="num">${todayCustomers}</div><div class="label">Today's Customers</div></div>
-    </div>
-
-    <div class="menu-list">
-      <div class="menu-item" onclick="openSalesHistory()">
-        <span class="icon">📈</span>
-        <div class="label">Sale History<div class="sub">${myOrders.length} orders</div></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="openDailyCustomers()">
-        <span class="icon">👥</span>
-        <div class="label">Daily Customers<div class="sub">${todayCustomers} today</div></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="openReferral()">
-        <span class="icon">🎁</span>
-        <div class="label">Referral Code<div class="sub">${esc(me.referralCode)} ${discountActive ? '🏆 10%' : `(${invited}/10)`}</div></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="openBusinessInfo()">
-        <span class="icon">🏪</span>
-        <div class="label">Business Info</div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="openContactAdmin()">
-        <span class="icon">💬</span>
-        <div class="label">Contact Admin</div>
-        <span class="arrow">›</span>
-      </div>
-    </div>
-
-    <button class="btn ghost full" onclick="logout()">Log Out</button>
-  `;
-}
-
-function openSalesHistory() {
-  const orders = state.cache.orders.slice().sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-  const html = orders.length ? orders.map(o => `
-    <div class="card" style="margin-bottom:10px;"><div class="body">
-      <div style="display:flex;justify-content:space-between;">
-        <b>$${o.total.toFixed(2)}</b>
-        <span class="badge ${o.status}">${o.status}</span>
-      </div>
-      <div class="desc">${o.items.map(i => `${i.qty}× ${esc(i.title)}`).join('<br>')}</div>
-      <div class="meta"><span>${new Date(o.createdAt).toLocaleString()}</span></div>
-    </div></div>`).join('') : '<p class="muted">No sales yet.</p>';
-  showModal('📈 Sale History', html);
-}
-
-function openDailyCustomers() {
-  const orders = state.cache.orders;
-  const todayStart = new Date().setHours(0,0,0,0);
-  const today = new Set(orders.filter(o => new Date(o.createdAt) >= todayStart).map(o => String(o.buyerId?._id || o.buyerId))).size;
-  const week = new Set(orders.filter(o => new Date(o.createdAt) >= Date.now() - 7*86400000).map(o => String(o.buyerId?._id || o.buyerId))).size;
-  const all = new Set(orders.map(o => String(o.buyerId?._id || o.buyerId))).size;
-  showModal('👥 Daily Customers', `
-    <div class="stats-grid">
-      <div class="stat-card"><div class="num">${today}</div><div class="label">Today</div></div>
-      <div class="stat-card info"><div class="num">${week}</div><div class="label">Last 7 days</div></div>
-      <div class="stat-card success"><div class="num">${all}</div><div class="label">All time</div></div>
-    </div>
-  `);
-}
-
-function openReferral() {
-  const me = state.me;
-  const count = me.invited?.length || 0;
-  const remaining = Math.max(0, 10 - count);
-  showModal('🎁 Referral Program', `
-    <div style="text-align:center;">
-      <div style="font-size:44px;">🎁</div>
-      <h3 style="margin:8px 0;">Your Referral Code</h3>
-      <div class="referral-code">${esc(me.referralCode)}</div>
-      <p class="muted text-sm">Share with friends. Invite 10 friends → get 10% discount.</p>
-      <div style="margin-top:16px;font-weight:700;">${count} / 10 friends invited</div>
-      <div class="referral-track"><div class="referral-fill" style="width:${Math.min(100, count*10)}%"></div></div>
-      <p class="muted text-sm mt-2">${remaining > 0 ? `Invite ${remaining} more.` : '🎉 Reward unlocked!'}</p>
-      <button class="btn small secondary mt-2" onclick="copyText('${esc(me.referralCode)}')">📋 Copy Code</button>
-    </div>
-  `);
-}
-
-function openBusinessInfo() {
-  const me = state.me;
-  showModal('🏪 Business Info', `
-    <div style="font-size:14px;line-height:2;">
-      <div><b>Business:</b> ${esc(me.businessName || '-')}</div>
-      <div><b>Type:</b> ${esc(me.businessType || '-')}</div>
-      <div><b>Owner:</b> ${esc(me.name)}</div>
-      <div><b>Email:</b> ${esc(me.email)}</div>
-      <div><b>Phone:</b> ${esc(me.phone)}</div>
-      <div><b>Address:</b> ${esc(me.address)}</div>
-      <div><b>Status:</b> ${me.approved ? '✅ Approved' : '⏳ Pending'}</div>
-    </div>
-  `);
-}
-
-function openContactAdmin() {
-  showModal('💬 Contact Admin', `
-    <div class="field"><label>Subject</label><input id="adminSubj" placeholder="e.g. Question"></div>
-    <div class="field"><label>Message</label><textarea id="adminBody" placeholder="Type your message..."></textarea></div>
-    <button class="btn full" onclick="sendToAdmin()">📤 Send to Admin</button>
-  `);
-}
-
-async function sendToAdmin() {
-  const subj = $('#adminSubj').value.trim();
-  const body = $('#adminBody').value.trim();
-  if (!body) { toast('Write a message', 'warn'); return; }
-  try {
-    await API.post('/messages/to-admin', { text: (subj ? `[${subj}] ` : '') + body });
-    toast('Message sent ✓', 'success');
-    closeModal();
-  } catch (err) { toast(err.message, 'danger'); }
-}
-
-/* ============================================================
-   BUYER APP
-   ============================================================ */
-function renderBuyerApp() {
-  const me = state.me;
-  if (!me || me.role !== 'buyer') { go('landing'); return ''; }
-
-  const tab = state.buyerTab || 'home';
-  let content = '';
-  if (tab === 'home')     content = buyerHome(me);
-  if (tab === 'live')     content = buyerLive(me);
-  if (tab === 'reels')    content = buyerReels(me);
-  if (tab === 'myorders') content = buyerMyOrders(me);
-  if (tab === 'account')  content = buyerAccount(me);
-
-  const warnBanner = me.warnings > 0 ? `<div class="banner warn">⚠️ <div><b>You have ${me.warnings} warning(s) from admin.</b> Please follow community guidelines.</div></div>` : '';
-
-  return `
-  <div class="app">
-    <div class="header">
-      <div class="logo"><span class="logo-icon">🛒</span><h1>Hi, ${esc(me.name.split(' ')[0])}</h1></div>
-      <button class="hdr-btn" onclick="logout()">Logout</button>
-    </div>
-    <div class="content">
-      ${warnBanner}
-      ${content}
-    </div>
-    ${renderBuyerNav(tab)}
-  </div>`;
-}
-
-function renderBuyerNav(active) {
-  const items = [
-    { id:'home', icon:'🍽️', label:'Order' },
-    { id:'live', icon:'📺', label:'Live' },
-    { id:'reels', icon:'🎬', label:'Reels' },
-    { id:'myorders', icon:'📦', label:'My Order' },
-    { id:'account', icon:'👤', label:'Account' }
-  ];
-  return `<div class="bottom-nav">${items.map(i => `
-    <button class="nav-btn ${active===i.id?'active':''}" onclick="state.buyerTab='${i.id}';render()">
-      <span class="nav-icon">${i.icon}</span><span>${i.label}</span>
-    </button>`).join('')}</div>`;
-}
-
-function buyerHome(me) {
-  const posts = state.cache.posts
-    .filter(p => p.sellerId && p.sellerId.approved !== false)
-    .map(p => {
-      const seller = p.sellerId;
-      let dist = null;
-      if (me.lat && me.lng && seller?.lat && seller?.lng) {
-        dist = distanceKm(me.lat, me.lng, seller.lat, seller.lng);
-      }
-      return { post: p, seller, dist };
-    })
-    .sort((a, b) => (a.dist ?? 999) - (b.dist ?? 999));
-
-  return `
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px;">🍽️ Order Food</h2>
-    <p class="muted text-sm" style="margin-bottom:14px;">
-      ${me.lat && me.lng ? 'Sorted by nearest kitchen 📍' : 'Set your location in Account to see distance.'}
-    </p>
-
-    ${posts.length ? posts.map(({ post, seller, dist }) => `
-      <div class="card">
-        ${post.image ? `<img src="${post.image}" alt="${esc(post.title)}">` : ''}
-        <div class="body">
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
-            <h4>${esc(post.title)}</h4>
-            <span class="price">$${post.price.toFixed(2)}</span>
-          </div>
-          <div class="desc">${esc(post.desc)}</div>
-          <div class="meta">
-            <span>🏪 ${esc(seller?.businessName || seller?.name || 'Seller')}</span>
-            ${dist != null ? `<span class="distance-pill">📍 ${dist.toFixed(1)} km</span>` : ''}
-          </div>
-          <div class="actions">
-            <button class="btn full" onclick="openOrderDialog('${post._id}')">Order Now</button>
-          </div>
-        </div>
-      </div>
-    `).join('') : `<div class="empty"><div class="ico">🍽️</div><p>No food posted yet.<br>Check back soon!</p></div>`}
-  `;
-}
-
-function openOrderDialog(postId) {
-  const me = state.me;
-  const post = state.cache.posts.find(p => String(p._id) === String(postId));
-  if (!post) return;
-  const seller = post.sellerId;
-  showModal(`Order from ${esc(seller?.businessName || seller?.name || 'Seller')}`, `
-    <div style="text-align:center;margin-bottom:14px;">
-      ${post.image ? `<img src="${post.image}" style="width:100%;border-radius:12px;max-height:180px;object-fit:cover;">` : ''}
-      <h3 style="margin-top:12px;">${esc(post.title)}</h3>
-      <div class="price" style="font-size:18px;">$${post.price.toFixed(2)}</div>
-    </div>
-    <form onsubmit="placeOrder(event, '${post._id}')">
-      <div class="field"><label>Quantity</label><input type="number" name="qty" value="1" min="1" required></div>
-      <div class="field"><label>Delivery Address</label><input required name="address" value="${esc(me.address || '')}" placeholder="Where should we deliver?"></div>
-      <div class="field"><label>Delivery Notes (optional)</label><textarea name="notes" placeholder="e.g. Call when you arrive...">${esc(me.deliveryInstructions || '')}</textarea></div>
-      <button class="btn full" type="submit" id="orderSubmitBtn">Confirm Order</button>
-    </form>
-  `);
-}
-
-async function placeOrder(e, postId) {
-  e.preventDefault();
-  const btn = $('#orderSubmitBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Placing order...';
-  const fd = new FormData(e.target);
-  const post = state.cache.posts.find(p => String(p._id) === String(postId));
-  const qty = parseInt(fd.get('qty')) || 1;
-
-  try {
-    await API.post('/orders', {
-      items: [{ postId, title: post.title, price: post.price, qty }],
-      address: fd.get('address').trim(),
-      notes: (fd.get('notes') || '').trim()
-    });
-    toast('Order placed! 🎉', 'success');
-    closeModal();
-    await loadAll();
-    state.buyerTab = 'myorders';
-    render();
-  } catch (err) {
-    toast(err.message, 'danger');
-    btn.disabled = false; btn.textContent = 'Confirm Order';
-  }
-}
-
-function buyerLive(me) {
-  const streams = state.cache.streams;
-  return `
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px;">📺 Live Cooking Streams</h2>
-    <p class="muted text-sm" style="margin-bottom:18px;">Watch sellers cook in real time.</p>
-
-    ${streams.length ? streams.map(s => {
-      const seller = s.sellerId;
-      let dist = null;
-      if (me.lat && me.lng && seller?.lat && seller?.lng) {
-        dist = distanceKm(me.lat, me.lng, seller.lat, seller.lng);
-      }
-      return `<div class="card">
-        <div class="stream-box">
-          <span class="live-tag badge live"><span class="live-dot"></span>LIVE</span>
-          <div class="placeholder">
-            <div class="ico">📡</div>
-            <p><b>${esc(s.title)}</b></p>
-            <p style="font-size:12px;opacity:0.75;margin-top:6px;">by ${esc(seller?.businessName || seller?.name || 'Seller')}</p>
-            ${dist != null ? `<p style="font-size:12px;opacity:0.75;margin-top:4px;">📍 ${dist.toFixed(1)} km away</p>` : ''}
-          </div>
-        </div>
-        <div class="body">
-          <button class="btn full" onclick="watchStream('${s._id}')">▶️ Watch Live</button>
-        </div>
-      </div>`;
-    }).join('') : `<div class="empty"><div class="ico">📺</div><p>No live streams right now.<br>Check back soon!</p></div>`}
-  `;
-}
-
-async function watchStream(streamId) {
-  const stream = state.cache.streams.find(s => String(s._id) === String(streamId));
-  if (!stream) return;
-  showModal(`📺 ${esc(stream.title)}`, `
-    <div id="agoraRemote" style="width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;"></div>
-    <p class="muted text-sm mt-2">by ${esc(stream.sellerId?.businessName || stream.sellerId?.name || 'Seller')}</p>
-    <button class="btn ghost full mt-2" onclick="closeStreamAndLeave()">Leave Stream</button>
-  `);
-
-  try {
-    const channelName = stream.channelName;
-    const { token, appId, uid } = await API.post('/agora/token', { channelName, role: 'audience' });
-
-    await leaveAgora();
-    const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-    state.agora.client = client;
-
-    client.on('user-published', async (user, mediaType) => {
-      await client.subscribe(user, mediaType);
-      if (mediaType === 'video') {
-        const container = document.getElementById('agoraRemote');
-        if (container) { container.innerHTML = ''; user.videoTrack.play(container); }
-      }
-      if (mediaType === 'audio') user.audioTrack.play();
-    });
-
-    await client.join(appId, channelName, token, uid || null);
-  } catch (err) {
-    toast('Could not join stream: ' + err.message, 'danger');
-  }
-}
-
-async function closeStreamAndLeave() {
-  await leaveAgora();
-  closeModal();
-}
-
-function buyerReels(me) {
-  const reels = state.cache.reels;
-  return `
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px;">🎬 Food Reels</h2>
-    <p class="muted text-sm" style="margin-bottom:18px;">Discover trending dishes from our sellers.</p>
-
-    ${reels.length ? reels.map(r => {
-      const s = r.sellerId;
-      return `<div class="card">
-        ${r.video ? `<video class="video-box" src="${r.video}" controls muted playsinline preload="metadata"></video>` : ''}
-        <div class="body">
-          <h4>${esc(r.title)}</h4>
-          <div class="meta">by ${esc(s?.businessName || s?.name || 'Seller')} • ${new Date(r.createdAt).toLocaleDateString()}</div>
-        </div>
-      </div>`;
-    }).join('') : `<div class="empty"><div class="ico">🎬</div><p>No reels yet.</p></div>`}
-  `;
-}
-
-function buyerMyOrders(me) {
-  const filter = state.orderFilter || 'all';
-  const allOrders = state.cache.orders.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  let orders = allOrders;
+/* ---------- Orders ---------- */
+function renderOrders() {
+  const filter = window._orderFilter || 'all';
+  let orders = D.orders.slice();
   if (filter !== 'all') orders = orders.filter(o => o.status === filter);
 
   const counts = {
-    all: allOrders.length,
-    pending: allOrders.filter(o => o.status === 'pending').length,
-    preparing: allOrders.filter(o => o.status === 'preparing').length,
-    delivering: allOrders.filter(o => o.status === 'delivering').length,
-    delivered: allOrders.filter(o => o.status === 'delivered').length
+    all: D.orders.length,
+    pending: D.orders.filter(o=>o.status==='pending').length,
+    preparing: D.orders.filter(o=>o.status==='preparing').length,
+    delivering: D.orders.filter(o=>o.status==='delivering').length,
+    delivered: D.orders.filter(o=>o.status==='delivered').length,
+    cancelled: D.orders.filter(o=>o.status==='cancelled').length
   };
 
   return `
-    <h2 style="font-size:20px;font-weight:800;margin-bottom:12px;">📦 My Orders</h2>
-
-    <div class="tabs">
-      ${Object.entries(counts).map(([k, v]) => `
-        <button class="tab ${filter===k?'active':''}" onclick="state.orderFilter='${k}';render()">${k} (${v})</button>
-      `).join('')}
+    <div class="card">
+      <div class="card-head">
+        <div class="row" style="flex:1;">
+          ${Object.entries(counts).map(([k,v]) => `<button class="btn small ${filter===k?'':'ghost'}" onclick="setOrderFilter('${k}')">${k} (${v})</button>`).join('')}
+        </div>
+      </div>
     </div>
-
-    ${orders.length ? orders.map(o => {
-      const seller = o.sellerId;
-      const steps = ['pending', 'preparing', 'delivering', 'delivered'];
-      const idx = steps.indexOf(o.status);
-      const progress = o.status === 'cancelled' ? 0 : ((idx + 1) / 4) * 100;
-
-      return `<div class="card"><div class="body">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
-          <b style="font-size:14px;">${o.items.map(i => `${i.qty}× ${esc(i.title)}`).join(', ')}</b>
-          <span class="badge ${o.status}">${o.status}</span>
-        </div>
-        <div class="meta" style="margin-top:8px;">
-          <span>🏪 ${esc(seller?.businessName || seller?.name || 'Seller')}</span>
-          ${o.distance != null ? `<span>📍 ${o.distance.toFixed(1)} km</span>` : ''}
-          <span>💰 $${o.total.toFixed(2)}</span>
-        </div>
-        <div class="desc">📍 ${esc(o.address)}</div>
-        ${o.notes ? `<div class="desc">📝 ${esc(o.notes)}</div>` : ''}
-        <div style="margin-top:14px;">
-          <div class="progress-labels">
-            <span>Pending</span><span>Preparing</span><span>Delivering</span><span>Delivered</span>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill" style="width:${progress}%"></div>
-          </div>
-        </div>
-      </div></div>`;
-    }).join('') : `<div class="empty"><div class="ico">📦</div><p>No orders in this category.</p></div>`}
+    <div class="card">
+      <div class="card-head"><h4>📦 Orders (${orders.length})</h4></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <tr><th>Date</th><th>Buyer</th><th>Seller</th><th>Items</th><th>Total</th><th>Distance</th><th>Status</th><th>Change</th></tr>
+          ${orders.length ? orders.map(o => {
+            const b = o.buyerId, s = o.sellerId;
+            return `<tr>
+              <td>${new Date(o.createdAt).toLocaleDateString()}<br><span class="muted text-sm">${fmtTime(o.createdAt)}</span></td>
+              <td>${esc(b?.name || '-')}</td>
+              <td>${esc(s?.businessName || s?.name || '-')}</td>
+              <td>${o.items.map(i=>`${i.qty}× ${esc(i.title)}`).join('<br>')}</td>
+              <td><b>$${o.total.toFixed(2)}</b></td>
+              <td>${o.distance != null ? o.distance.toFixed(1)+' km' : '—'}</td>
+              <td><span class="badge ${o.status}">${o.status}</span></td>
+              <td>
+                <select onchange="updateOrderStatus('${o._id}', this.value)" style="padding:6px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:12px;">
+                  ${['pending','preparing','delivering','delivered','cancelled'].map(st => `<option ${o.status===st?'selected':''}>${st}</option>`).join('')}
+                </select>
+              </td>
+            </tr>`;
+          }).join('') : '<tr><td colspan="8" class="muted" style="text-align:center;padding:24px;">No orders</td></tr>'}
+        </table>
+      </div>
+    </div>
   `;
 }
 
-function buyerAccount(me) {
-  const orders = state.cache.orders;
-  const favSellers = new Set(orders.map(o => String(o.sellerId?._id || o.sellerId)));
-  const invited = me.invited?.length || 0;
-  const discountActive = invited >= 10;
+function setOrderFilter(f) { window._orderFilter = f; navigate('orders'); }
+async function updateOrderStatus(id, status) {
+  try { await API.patch('/admin/orders/' + id + '/status', { status }); toast('Order → ' + status, 'success'); await loadAndRender(); }
+  catch (err) { toast(err.message, 'danger'); }
+}
 
+/* ---------- Messages ---------- */
+function renderMessages() {
   return `
-    <div class="profile-head">
-      <div class="avatar">${me.avatar ? `<img src="${me.avatar}">` : esc(me.name.charAt(0).toUpperCase())}</div>
-      <h3>${esc(me.name)}</h3>
-      <p>${esc(me.email)}</p>
+    <div class="card">
+      <div class="card-head"><h4>💬 User Messages (${D.messages.length})</h4><div class="sub">Click to read and reply</div></div>
+      ${D.messages.length ? D.messages.map(m => {
+        const sender = m.fromUserId;
+        const initials = (sender?.name || 'U').charAt(0).toUpperCase();
+        return `<div class="msg ${!m.read?'unread':''} ${m.flagged?'abusive':''}" onclick="openMessage('${m._id}')">
+          <div class="head">
+            <div class="from">${initials} — ${esc(sender?.name || 'Unknown')} <span class="muted text-sm">(${sender?.role || ''})</span></div>
+            <div class="time">${fmtTime(m.createdAt)}</div>
+          </div>
+          <div class="body">${esc(m.text.slice(0,120))}${m.text.length>120?'…':''}</div>
+          ${!m.read?'<div style="margin-top:6px;"><span class="badge pending">Unread</span></div>':''}
+        </div>`;
+      }).join('') : '<div class="empty"><div class="ico">💬</div><p>No messages</p></div>'}
     </div>
-
-    <div class="stats-grid">
-      <div class="stat-card"><div class="num">${orders.length}</div><div class="label">Orders Placed</div></div>
-      <div class="stat-card info"><div class="num">${favSellers.size}</div><div class="label">Restaurants Tried</div></div>
-    </div>
-
-    <div class="menu-list">
-      <div class="menu-item" onclick="openOrderHistory()">
-        <span class="icon">📜</span>
-        <div class="label">Order History<div class="sub">${orders.length} orders</div></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="openFavorites()">
-        <span class="icon">❤️</span>
-        <div class="label">Favorite Restaurants<div class="sub">${favSellers.size} tried</div></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="openDeliveryInstructions()">
-        <span class="icon">🚚</span>
-        <div class="label">Delivery Instructions<div class="sub">${me.deliveryInstructions ? 'Saved' : 'Not set'}</div></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="openReferral()">
-        <span class="icon">🎁</span>
-        <div class="label">Referral Code<div class="sub">${esc(me.referralCode)} ${discountActive ? '🏆' : `(${invited}/10)`}</div></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="setMyLocation()">
-        <span class="icon">📍</span>
-        <div class="label">Set My Location<div class="sub">${me.lat ? 'Set ✓' : 'Not set'}</div></div>
-        <span class="arrow">›</span>
-      </div>
-      <div class="menu-item" onclick="openContactAdmin()">
-        <span class="icon">💬</span>
-        <div class="label">Contact Admin</div>
-        <span class="arrow">›</span>
-      </div>
-    </div>
-
-    <button class="btn ghost full" onclick="logout()">Log Out</button>
   `;
 }
 
-function openOrderHistory() {
-  const orders = state.cache.orders.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  const html = orders.length ? orders.map(o => `
-    <div class="card" style="margin-bottom:10px;"><div class="body">
-      <div style="display:flex;justify-content:space-between;">
-        <b>$${o.total.toFixed(2)}</b>
-        <span class="badge ${o.status}">${o.status}</span>
-      </div>
-      <div class="desc">${o.items.map(i => `${i.qty}× ${esc(i.title)}`).join('<br>')}</div>
-      <div class="meta"><span>${new Date(o.createdAt).toLocaleString()}</span></div>
-    </div></div>`).join('') : '<p class="muted">No order history yet.</p>';
-  showModal('📜 Order History', html);
-}
-
-function openFavorites() {
-  const orders = state.cache.orders;
-  const counts = {};
-  orders.forEach(o => {
-    const sid = String(o.sellerId?._id || o.sellerId);
-    counts[sid] = (counts[sid] || 0) + 1;
-  });
-  const fav = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const html = fav.length ? fav.map(([sid, c]) => {
-    const order = orders.find(o => String(o.sellerId?._id || o.sellerId) === sid);
-    const s = order?.sellerId;
-    return `<div class="card" style="margin-bottom:10px;"><div class="body">
-      <h4>🏪 ${esc(s?.businessName || s?.name || 'Seller')}</h4>
-      <div class="meta">${c} order${c > 1 ? 's' : ''}</div>
-    </div></div>`;
-  }).join('') : '<p class="muted">Order from a few sellers to see favorites here.</p>';
-  showModal('❤️ Favorite Restaurants', html);
-}
-
-function openDeliveryInstructions() {
-  const me = state.me;
-  showModal('🚚 Delivery Instructions', `
-    <div class="field">
-      <label>Default delivery instructions</label>
-      <textarea id="diField" placeholder="e.g. Gate code 1234...">${esc(me.deliveryInstructions || '')}</textarea>
+function openMessage(id) {
+  const m = D.messages.find(x => x._id === id);
+  if (!m) return;
+  const sender = m.fromUserId;
+  showModal(`💬 From ${esc(sender?.name || 'Unknown')}`, `
+    <div class="muted text-sm mb-2">
+      <div>Email: <b>${esc(sender?.email || '—')}</b></div>
+      <div>Phone: <b>${esc(sender?.phone || '—')}</b></div>
+      <div>Sent: ${fmtDate(m.createdAt)}</div>
     </div>
-    <button class="btn full" onclick="saveDeliveryInstructions()">Save Instructions</button>
-  `);
+    <div class="divider"></div>
+    <div style="background:var(--bg2);padding:14px;border-radius:10px;line-height:1.6;">${esc(m.text)}</div>
+    <div class="divider"></div>
+    <div class="form-group">
+      <label>Your reply</label>
+      <textarea id="replyText" placeholder="Type a reply..."></textarea>
+    </div>
+  `, [
+    { label:'🚩 Flag', class:'warn', action: async () => { try { await API.patch('/admin/messages/' + id + '/flag', {}); toast('Flagged', 'warn'); closeModal(); await loadAndRender(); } catch(e){ toast(e.message,'danger'); } } },
+    { label:'⚠️ Warn', class:'warn', action: () => { closeModal(); openWarnUser(sender?._id); } },
+    { label:'🚫 Block', class:'danger', action: () => { closeModal(); openBlockUser(sender?._id); } },
+    { label:'📤 Reply', class:'success', action: async () => {
+      const txt = $('#replyText').value.trim();
+      if (!txt) { toast('Write a reply', 'warn'); return; }
+      try { await API.post('/messages/to-user', { userId: sender?._id, text: txt }); toast('Reply sent ✓', 'success'); closeModal(); }
+      catch (err) { toast(err.message, 'danger'); }
+    }}
+  ]);
 }
 
-async function saveDeliveryInstructions() {
-  const val = $('#diField').value.trim();
-  try {
-    const updated = await API.patch('/users/me', { deliveryInstructions: val });
-    state.me = updated;
-    toast('Instructions saved ✓', 'success');
-    closeModal();
-    render();
-  } catch (err) { toast(err.message, 'danger'); }
+/* ---------- Warnings ---------- */
+function renderWarnings() {
+  return `
+    <div class="card">
+      <div class="card-head"><h4>⚠️ Warnings Issued (${D.warnings.length})</h4></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <tr><th>Date</th><th>User</th><th>Role</th><th>Reason</th><th>Message</th></tr>
+          ${D.warnings.length ? D.warnings.map(w => `
+            <tr>
+              <td>${fmtDate(w.createdAt)}</td>
+              <td>${esc(w.userId?.name || '(deleted)')}</td>
+              <td>${esc(w.userId?.role || '-')}</td>
+              <td><b>${esc(w.reason)}</b></td>
+              <td class="muted text-sm">${esc(w.message)}</td>
+            </tr>
+          `).join('') : '<tr><td colspan="5" class="muted" style="text-align:center;padding:24px;">No warnings</td></tr>'}
+        </table>
+      </div>
+    </div>
+  `;
 }
 
-function setMyLocation() {
-  if (!navigator.geolocation) { toast('Not supported', 'warn'); return; }
-  toast('Getting location...');
-  navigator.geolocation.getCurrentPosition(
-    async pos => {
+/* ---------- Blocked ---------- */
+function renderBlocked() {
+  return `
+    <div class="card">
+      <div class="card-head"><h4>🚫 Blocked Users (${D.blocked.length})</h4></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <tr><th>Date</th><th>User</th><th>Email</th><th>Role</th><th>Reason</th><th>Actions</th></tr>
+          ${D.blocked.length ? D.blocked.map(b => `
+            <tr>
+              <td>${fmtDate(b.createdAt)}</td>
+              <td>${esc(b.userId?.name || '(removed)')}</td>
+              <td>${esc(b.userId?.email || '-')}</td>
+              <td>${esc(b.userId?.role || '-')}</td>
+              <td class="muted text-sm">${esc(b.reason)}</td>
+              <td><button class="btn small success" onclick="unblockUser('${b.userId?._id}')">✅ Unblock</button></td>
+            </tr>
+          `).join('') : '<tr><td colspan="6" class="muted" style="text-align:center;padding:24px;">No blocked users</td></tr>'}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Actions ---------- */
+function openWarnUser(userId) {
+  const u = D.users.find(x => x._id === userId);
+  if (!u) return;
+  showModal(`⚠️ Warn ${esc(u.name)}`, `
+    <div class="form-group">
+      <label>Reason</label>
+      <select id="warnReason">
+        <option>Inappropriate content</option>
+        <option>Non-food reel content</option>
+        <option>Abusive language</option>
+        <option>Spam or misleading</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea id="warnMsg" placeholder="Explain what needs to change..."></textarea>
+    </div>
+  `, [
+    { label:'Cancel', class:'ghost', action: closeModal },
+    { label:'⚠️ Warn', class:'warn', action: async () => {
       try {
-        const updated = await API.patch('/users/me', {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
+        await API.post('/admin/warn/' + userId, {
+          reason: $('#warnReason').value,
+          message: $('#warnMsg').value.trim() || 'Please review our community guidelines.'
         });
-        state.me = updated;
-        toast('Location set ✓', 'success');
-        await loadAll();
-        render();
+        toast('Warning sent', 'warn'); closeModal(); await loadAndRender();
       } catch (err) { toast(err.message, 'danger'); }
-    },
-    err => toast('Could not get location: ' + err.message, 'danger'),
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
+    }}
+  ]);
 }
 
-/* ============================================================
-   MODAL & UTILS
-   ============================================================ */
-function showModal(title, html) {
-  let bg = document.getElementById('appModal');
+function openBlockUser(userId) {
+  const u = D.users.find(x => x._id === userId);
+  if (!u) return;
+  showModal(`🚫 Block ${esc(u.name)}`, `
+    <div class="text-danger mb-2">⚠️ This will prevent the user from using the app.</div>
+    <div class="form-group">
+      <label>Reason</label>
+      <select id="blockReason">
+        <option>Repeated policy violations</option>
+        <option>Abusive messages</option>
+        <option>Posting non-food content</option>
+        <option>Fraud / scam</option>
+        <option>Other</option>
+      </select>
+    </div>
+  `, [
+    { label:'Cancel', class:'ghost', action: closeModal },
+    { label:'🚫 Block', class:'danger', action: async () => {
+      try { await API.post('/admin/block/' + userId, { reason: $('#blockReason').value }); toast('Blocked', 'danger'); closeModal(); await loadAndRender(); }
+      catch (err) { toast(err.message, 'danger'); }
+    }}
+  ]);
+}
+
+async function unblockUser(userId) {
+  if (!confirm('Unblock this user?')) return;
+  try { await API.post('/admin/unblock/' + userId, {}); toast('Unblocked', 'success'); await loadAndRender(); }
+  catch (err) { toast(err.message, 'danger'); }
+}
+
+function openContactUser(userId) {
+  const u = D.users.find(x => x._id === userId);
+  if (!u) return;
+  showModal(`✉️ Contact ${esc(u.name)}`, `
+    <div class="form-group"><label>Subject</label><input id="ctSubject" placeholder="e.g. Account update"></div>
+    <div class="form-group"><label>Message</label><textarea id="ctBody" placeholder="Type your message..."></textarea></div>
+  `, [
+    { label:'Cancel', class:'ghost', action: closeModal },
+    { label:'📤 Send', class:'success', action: async () => {
+      const subj = $('#ctSubject').value.trim() || 'Message from FoodFast Admin';
+      const body = $('#ctBody').value.trim();
+      if (!body) { toast('Write a message', 'warn'); return; }
+      try { await API.post('/messages/to-user', { userId: u._id, text: `[${subj}] ${body}` }); toast('Sent', 'success'); closeModal(); }
+      catch (err) { toast(err.message, 'danger'); }
+    }}
+  ]);
+}
+
+/* ---------- Modal ---------- */
+function showModal(title, bodyHTML, buttons = []) {
+  let bg = document.getElementById('adminModal');
   if (!bg) {
     bg = document.createElement('div');
-    bg.className = 'modal-bg';
-    bg.id = 'appModal';
-    bg.onclick = (e) => { if (e.target === bg) closeModal(); };
-    bg.innerHTML = `<div class="modal"><div class="modal-head"><h3 id="appModalTitle"></h3><button class="modal-close" onclick="closeModal()">×</button></div><div id="appModalBody"></div></div>`;
+    bg.className = 'modal-bg'; bg.id = 'adminModal';
+    bg.onclick = e => { if (e.target === bg) closeModal(); };
+    bg.innerHTML = `<div class="modal"><div class="modal-head"><h3 id="mTitle"></h3><button class="modal-close" onclick="closeModal()">×</button></div><div class="modal-body" id="mBody"></div><div class="modal-foot" id="mFoot"></div></div>`;
     document.body.appendChild(bg);
   }
-  $('#appModalTitle').textContent = title;
-  $('#appModalBody').innerHTML = html;
+  document.getElementById('mTitle').innerHTML = title;
+  document.getElementById('mBody').innerHTML = bodyHTML;
+  document.getElementById('mFoot').innerHTML = buttons.map((b,i) => `<button class="btn ${b.class||''}" data-idx="${i}">${b.label}</button>`).join('');
+  buttons.forEach((b,i) => {
+    const el = document.querySelector(`#mFoot [data-idx="${i}"]`);
+    if (el) el.onclick = b.action;
+  });
   bg.classList.add('open');
 }
 
 function closeModal() {
-  const bg = document.getElementById('appModal');
+  const bg = document.getElementById('adminModal');
   if (bg) bg.classList.remove('open');
 }
 
-function copyText(text) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(
-      () => toast('Copied!', 'success'),
-      () => toast('Copy failed', 'danger')
-    );
-  }
+/* ---------- Boot ---------- */
+async function bootAdmin() {
+  renderNav();
+  await loadAndRender();
+  connectSocket();
 }
+
+(function init() {
+  if (API.token) {
+    document.getElementById('loginScreen').style.display = 'none';
+    bootAdmin();
+  }
+})();
 </script>
 </body>
 </html>
