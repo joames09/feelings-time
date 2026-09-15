@@ -733,7 +733,7 @@ async function deletePost(id) {
 }
 
 /* ============================================================
-   LIVE STREAMING
+   LIVE STREAMING — WITH FIXED AGORA ROLES
    ============================================================ */
 function sellerLive(me) {
   const myStream = state.cache.streams.find(s => String(s.sellerId?._id || s.sellerId) === String(me._id));
@@ -784,43 +784,45 @@ async function startMyStream(e) {
   const title = fd.get('title').trim();
 
   try {
-    // Step 1: Create stream record on backend (returns _id + channelName)
+    // Step 1: Create stream record on backend
     const created = await API.post('/streams', { title });
     const channelName = created.channelName;
-    const streamId = created._id;
 
     if (!channelName) {
-      throw new Error('Backend did not return channelName — check /routes/streams.js');
+      throw new Error('Backend did not return channelName');
     }
 
-    // Step 2: Get Agora token
+    // Step 2: Get Agora token as publisher
     const tokenRes = await API.post('/agora/token', { channelName, role: 'publisher' });
     const { token, appId, uid } = tokenRes;
 
     if (!token || !appId) {
-      throw new Error('Agora token generation failed — check /routes/agora.js and env vars');
+      throw new Error('Agora token generation failed');
     }
 
     // Step 3: Leave any previous session
     await leaveAgora();
 
-    // Step 4: Create Agora client and join
+    // Step 4: Create Agora client
     const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
     state.agora.client = client;
 
-    // Handle viewer count and errors
+    // ⚠️ CRITICAL: Set role to HOST so we can publish
+    await client.setClientRole('host');
+
     client.on('user-joined', () => {
       toast('👤 Someone joined your stream', 'success');
     });
 
+    // Step 5: Join the channel
     await client.join(appId, channelName, token, uid || null);
 
-    // Step 5: Create camera + mic tracks
+    // Step 6: Create camera + mic tracks
     const [videoTrack, audioTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
     state.agora.videoTrack = videoTrack;
     state.agora.audioTrack = audioTrack;
 
-    // Step 6: Publish to channel
+    // Step 7: Publish to channel
     await client.publish([videoTrack, audioTrack]);
 
     toast('You are LIVE 🔴', 'success');
@@ -828,14 +830,14 @@ async function startMyStream(e) {
     state.sellerTab = 'live';
     render();
 
-    // Step 7: Play local preview after the DOM updates
+    // Step 8: Play the local preview after the DOM updates
     setTimeout(() => {
       const container = document.getElementById('agoraLocal');
       if (container && state.agora.videoTrack) {
         container.innerHTML = '';
         state.agora.videoTrack.play(container);
       }
-    }, 200);
+    }, 250);
   } catch (err) {
     console.error('Go live error:', err);
     toast('Failed to go live: ' + err.message, 'danger');
@@ -1142,7 +1144,7 @@ function renderBuyerNav(active) {
 }
 
 function buyerHome(me) {
-  const posts = state.cache.posts    .filter(p => p.sellerId && p.sellerId.approved !== false)
+  const posts = state.cache.posts.filter(p => p.sellerId && p.sellerId.approved !== false)
     .map(p => {
       const seller = p.sellerId;
       let dist = null;
@@ -1282,6 +1284,9 @@ async function watchStream(streamId) {
     await leaveAgora();
     const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
     state.agora.client = client;
+
+    // ⚠️ CRITICAL: Set role to AUDIENCE — buyers only watch
+    await client.setClientRole('audience');
 
     client.on('user-published', async (user, mediaType) => {
       await client.subscribe(user, mediaType);
@@ -1552,4 +1557,4 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
- </html>
+</html>
